@@ -1,6 +1,12 @@
 # ⚒️ PyForged
 
 A modular Python ecosystem, comprised of a suite of separate but interoperable packages designed to accelerate deployment.
+### 🔹 Key Features
+
+#### ✅ Modularity & Extensibility
+Packages work independently or together.
+Extend functionality with plugins, hooks, and dynamic loading.
+Flexible configuration options (file-based, DB-backed, in-memory).
 
 
 ## The Ecosystem
@@ -51,15 +57,15 @@ Replace package_name with the desired package, e.g., bedrocked, runecaller, etc.
 
 #### Available Installation Mixes
 
-| Package // Mix    | suite |   |   |   |   |          | | 
-|-------------------|-------|---|---|---|---|----------|-|
-| **Bedrocked**     | ❎     | ❎ | ❎ | ❎ | ❌ | 
-| **RuneCaller**    | ❎     |   |   |   |   |          |
-| **WardKeeper**    | ❎     |   |   |   |   |          |
-| **EssenceBinder** | ❎     |   |   |   |   |          |
-| **Concordance**   | ❎     |   |   |   |   |          |
-| **HexCrafter**    | ❎     |   |   |   |   |          |
-| **CovenantLedger**| ❎     |   |   |   |   |          |
+| Package // Mix     | suite | std |   |   |   |          | | 
+|--------------------|-------|-----|---|---|---|----------|-|
+| **Bedrocked**      | ❎     | ❎   | ❎ | ❎ | ❌ | 
+| **RuneCaller**     | ❎     | ❎   |   |   |   |          |
+| **WardKeeper**     | ❎     | ❎   |   |   |   |          |
+| **EssenceBinder**  | ❎     |     |   |   |   |          |
+| **Concordance**    | ❎     |     |   |   |   |          |
+| **HexCrafter**     | ❎     |     |   |   |   |          |
+| **CovenantLedger** | ❎     |     |   |   |   |          |
 .
 
 --------------------------------------------
