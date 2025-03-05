@@ -10,7 +10,8 @@ authors = [{name = "DirtyWork Solutions Limited", email = "runecaller@open.dirty
 license = {file = "LICENSE.md"}
 readme = "README.md"
 dependencies = [
-    "pyutils"
+    "pytest~=8.3.5",
+    "pytest-metadata~=3.1.1"
 ]
 
 [build-system]
@@ -25,7 +26,8 @@ authors = [{name = "DirtyWork Solutions Limited", email = "runecaller@open.dirty
 license = {file = "LICENSE.md"}
 readme = "README.md"
 dependencies = [
-    "antlr4-python3-runtime~=4.9.3"
+    "antlr4-python3-runtime~=4.9.3",
+    "pydantic~=2.10.6"
 ]
 
 [project.optional-dependencies]
@@ -34,6 +36,12 @@ suite = [
     "runecaller~=0.1.0",
     "wardkeeper~=0.1.0"
 ]
+std = [
+    "bedrocked~=0.1.0",
+    "runecaller~=0.1.0",
+    "wardkeeper~=0.1.0"
+]
+
 
 [project.urls]
 Homepage = "https://open.dirtywork.solutions/runecaller"
