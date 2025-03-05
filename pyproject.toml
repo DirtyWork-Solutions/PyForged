@@ -11,12 +11,31 @@ authors = [
 ]
 license = {file = "LICENSE.md"}
 readme = "README.md"
+requires-python = ">=3.13"
 
 dependencies = [
     "antlr4-python3-runtime~=4.9.3",
     "pytest~=8.3.5",
     "pytest-metadata~=3.1.1",
     "pydantic~=2.10.6"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Framework :: Pytest",
+    "Framework :: Pydantic",
+    "Intended Audience :: Developers",
+    "Topic :: System",
+    "Topic :: System :: Logging",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Topic :: System :: Installation/Setup"
 ]
 
 [project.optional-dependencies]
