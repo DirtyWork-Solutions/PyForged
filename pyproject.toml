@@ -45,6 +45,6 @@ std = [
 
 [project.urls]
 Homepage = "https://open.dirtywork.solutions/runecaller"
-Documentation = "https://github.com/DirtyWork-Solutions/RuneCaller/docs/CONTENTS.md"
+Documentation = "https://github.com/DirtyWork-Solutions/RuneCaller/docs/INDEX.md"
 Source = "https://github.com/DirtyWork-Solutions/RuneCaller"
 Issues = "https://github.com/DirtyWork-Solutions/RuneCaller/tree/main/.github/ISSUE_TEMPLATE"
