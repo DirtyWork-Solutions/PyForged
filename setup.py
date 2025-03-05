@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'antlr4-python3-runtime~=4.9.3',
-        'pydantic~=2.10.6'
+        'pydantic~=2.10.6',
         'pytest~=8.3.5',
         'pytest-metadata~=3.1.1'
         ],
