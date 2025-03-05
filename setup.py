@@ -20,6 +20,7 @@ setup(
     url='https://github.com/DirtyWork-Solutions/PyForged',
     classifiers=[
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.13',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
