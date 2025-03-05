@@ -5,24 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyforged"
 version = "0.2.0"
-description = "A PyForged Ecosytem Project for adaptability, modular and extendable."
-authors = [{name = "DirtyWork Solutions Limited", email = "runecaller@open.dirtywork.solutions"}]
-license = {file = "LICENSE.md"}
-readme = "README.md"
-dependencies = [
-    "pytest~=8.3.5",
-    "pytest-metadata~=3.1.1"
+description = "The PyForged EcoSystem (core)."
+authors = [
+    {name = "DirtyWork Solutions Limited", email = "pyforge-core@open.dirtywork.solutions"}
 ]
-
-[project]
-name = "pyforged"
-version = "0.2.0"
-description = "A PyForged Ecosytem Project for adaptability, modular and extendable."
-authors = [{name = "DirtyWork Solutions Limited", email = "runecaller@open.dirtywork.solutions"}]
 license = {file = "LICENSE.md"}
 readme = "README.md"
+
 dependencies = [
     "antlr4-python3-runtime~=4.9.3",
+    "pytest~=8.3.5",
+    "pytest-metadata~=3.1.1",
     "pydantic~=2.10.6"
 ]
 
@@ -38,9 +31,8 @@ std = [
     "wardkeeper~=0.1.0"
 ]
 
-
 [project.urls]
-Homepage = "https://open.dirtywork.solutions/runecaller"
+Homepage = "https://open.dirtywork.solutions/pyforged"
 Documentation = "https://github.com/DirtyWork-Solutions/RuneCaller/docs/INDEX.md"
 Source = "https://github.com/DirtyWork-Solutions/RuneCaller"
 Issues = "https://github.com/DirtyWork-Solutions/RuneCaller/tree/main/.github/ISSUE_TEMPLATE"

@@ -8,7 +8,7 @@ setup(
         'antlr4-python3-runtime~=4.9.3',
         'pydantic~=2.10.6'
         'pytest~=8.3.5',
-        'pytest-metadata~=3.1.1',
+        'pytest-metadata~=3.1.1'
         ],
     entry_points={
         'console_scripts': [],
