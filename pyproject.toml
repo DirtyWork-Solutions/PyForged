@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyforged"
-version = "0.2.0"
+version = "0.2.1"
 description = "The PyForged EcoSystem (core)."
 authors = [
     {name = "DirtyWork Solutions Limited", email = "pyforge-core@open.dirtywork.solutions"}
@@ -28,11 +28,8 @@ classifiers = [
     "Operating System :: OS Independent",
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
-    "Framework :: Pytest",
-    "Framework :: Pydantic",
     "Intended Audience :: Developers",
     "Topic :: System",
-    "Topic :: System :: Logging",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
     "Topic :: System :: Installation/Setup"
@@ -49,6 +46,7 @@ std = [
     "runecaller~=0.1.0",
     "wardkeeper~=0.1.0"
 ]
+dev = []
 
 [project.urls]
 Homepage = "https://open.dirtywork.solutions/pyforged"
