@@ -1,7 +1,7 @@
 import inspect
 import logging
 import asyncio
-from typing import Any, Callable, Dict, Type, Optional
+from typing import Any, Callable, Dict, Type, Optional, Union
 from threading import Lock
 
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +18,7 @@ class ServiceInitializationException(Exception):
 class ServiceRegistry:
     def __init__(self):
         self._services: Dict[str, Any] = {}
-        self._factories: Dict[str, Callable[..., Any]] = {}
+        self._factories: Dict[str, Union[Callable[..., Any], Callable[..., asyncio.Future]]] = {}
         self._singletons: Dict[str, Any] = {}
         self._aliases: Dict[str, str] = {}
         self._lifecycle_hooks: Dict[str, Dict[str, Optional[Callable]]] = {}
@@ -27,7 +27,7 @@ class ServiceRegistry:
 
     def register(self, service_name: str, instance: Any, singleton: bool = False,
                  aliases: Optional[list] = None,
-                 on_init: Optional[Callable] = None, on_shutdown: Optional[Callable] = None):
+                 on_init: Optional[Callable] = None, on_shutdown: Optional[Callable] = None) -> None:
         with self._lock:
             logging.info(f"Registering service: {service_name}")
             self._services[service_name] = instance
@@ -38,9 +38,9 @@ class ServiceRegistry:
                 for alias in aliases:
                     self._aliases[alias] = service_name
 
-    def register_factory(self, service_name: str, factory: Callable[..., Any], singleton: bool = True,
-                         aliases: Optional[list] = None,
-                         on_init: Optional[Callable] = None, on_shutdown: Optional[Callable] = None):
+    def register_factory(self, service_name: str, factory: Union[Callable[..., Any], Callable[..., asyncio.Future]],
+                         singleton: bool = True, aliases: Optional[list] = None,
+                         on_init: Optional[Callable] = None, on_shutdown: Optional[Callable] = None) -> None:
         with self._lock:
             logging.info(f"Registering factory for service: {service_name}")
             self._factories[service_name] = factory
@@ -51,7 +51,16 @@ class ServiceRegistry:
                 for alias in aliases:
                     self._aliases[alias] = service_name
 
-    def middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]):
+    def unregister(self, service_name: str) -> None:
+        with self._lock:
+            logging.info(f"Unregistering service: {service_name}")
+            resolved_name = self._aliases.pop(service_name, service_name)
+            self._services.pop(resolved_name, None)
+            self._factories.pop(resolved_name, None)
+            self._singletons.pop(resolved_name, None)
+            self._lifecycle_hooks.pop(resolved_name, None)
+
+    def middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]) -> None:
         logging.info(f"Registering middleware for: {hook_name}")
         self._middleware[hook_name] = middleware_func
 
@@ -64,6 +73,8 @@ class ServiceRegistry:
             if resolved_name in self._factories:
                 try:
                     instance = self._factories[resolved_name]()
+                    if asyncio.iscoroutine(instance):
+                        instance = asyncio.run(instance)
                     if middleware := self._middleware.get('after_init'):
                         middleware(instance)
                     if self._lifecycle_hooks[resolved_name]['on_init']:
@@ -88,7 +99,7 @@ class ServiceRegistry:
         }
         return service_class(**dependencies)
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         with self._lock:
             for service_name, hooks in self._lifecycle_hooks.items():
                 if hooks['on_shutdown'] and service_name in self._singletons:
@@ -97,45 +108,46 @@ class ServiceRegistry:
                         await result
 
 
-# Example Usage
+if __name__ == '__main__':
+    # Example Usage
 
-class Database:
-    def connect(self):
-        logging.info("Connecting to the database.")
+    class Database:
+        def connect(self):
+            logging.info("Connecting to the database.")
 
-    def disconnect(self):
-        logging.info("Disconnecting from the database.")
-
-
-class Logger:
-    def log(self, message: str):
-        logging.info(f"Logger: {message}")
+        def disconnect(self):
+            logging.info("Disconnecting from the database.")
 
 
-class UserService:
-    def __init__(self, database: Database, logger: Logger):
-        self.database = database
-        self.logger = logger
-
-    def create_user(self, username: str):
-        self.database.connect()
-        self.logger.log(f"User {username} created.")
-        self.database.disconnect()
+    class Logger:
+        def log(self, message: str):
+            logging.info(f"Logger: {message}")
 
 
-async def main():
-    registry = ServiceRegistry()
+    class UserService:
+        def __init__(self, database: Database, logger: Logger):
+            self.database = database
+            self.logger = logger
 
-    registry.register_factory("Database", Database, singleton=True,
-                              on_init=lambda db: db.connect(),
-                              on_shutdown=lambda db: db.disconnect())
-    registry.register("Logger", Logger(), singleton=True, aliases=["ILogging"])
-
-    user_service: UserService = registry.inject_dependencies(UserService)
-    user_service.create_user("alice")
-
-    await registry.shutdown()
+        def create_user(self, username: str):
+            self.database.connect()
+            self.logger.log(f"User {username} created.")
+            self.database.disconnect()
 
 
-if __name__ == "__main__":
+    async def main():
+        registry = ServiceRegistry()
+
+        registry.register_factory("Database", Database, singleton=True,
+                                  on_init=lambda db: db.connect(),
+                                  on_shutdown=lambda db: db.disconnect())
+        registry.register("Logger", Logger(), singleton=True, aliases=["ILogging"])
+
+        user_service: UserService = registry.inject_dependencies(UserService)
+        user_service.create_user("alice")
+
+        await registry.shutdown()
+
+
+    # Run the example
     asyncio.run(main())

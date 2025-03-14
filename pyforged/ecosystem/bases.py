@@ -79,7 +79,9 @@ class PyForgeProjectRegistry:
 # Example Usage
 if __name__ == "__main__":
     registry = PyForgeProjectRegistry()
-    print(registry.register_project("MyPyForgeApp", "./my_project", dependencies={"PyExtend": "1.2.3"},
+    print(registry.register_project("MyPyForgeApp",
+                                    "./my_project",
+                                    dependencies={"PyExtend": "1.2.3"},
                                     interoperability={"PySync": "enabled"}))
     print(registry.list_projects())
     print(registry.get_project("my_project"))
