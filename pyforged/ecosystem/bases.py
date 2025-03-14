@@ -5,7 +5,7 @@ import importlib.metadata
 
 
 class PyForgeProjectRegistry:
-    REGISTRY_FILE = Path.home() / ".pyforge_projects.json"
+    REGISTRY_FILE = Path.home() / ".native.json"
 
     def __init__(self):
         self._load_registry()
