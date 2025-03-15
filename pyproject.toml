@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyforged"
-version = "0.2.2"
+version = "0.2.3"
 description = "The PyForged EcoSystem (core)."
 authors = [
     {name = "DirtyWork Solutions Limited", email = "pyforge-core@open.dirtywork.solutions"}
@@ -17,7 +17,8 @@ dependencies = [
     "antlr4-python3-runtime~=4.9.3",
     "pytest~=8.3.5",
     "pytest-metadata~=3.1.1",
-    "pydantic~=2.10.6"
+    "pydantic~=2.10.6",
+    "cryptography~=44.0.2"
 ]
 
 classifiers = [
