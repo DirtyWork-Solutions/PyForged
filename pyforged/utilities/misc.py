@@ -1,6 +1,8 @@
 import importlib.metadata
-from typing import Union
-
+import json
+import sys
+from typing import Union, List
+import subprocess
 from packaging.version import Version, InvalidVersion
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 
@@ -58,11 +60,103 @@ def is_version_compatible(package_name, version_spec) -> bool:
     except (importlib.metadata.PackageNotFoundError, InvalidVersion, InvalidSpecifier):
         return False
 
+def list_package_dependencies(package_name: str) -> Union[List[str], None]:
+    """
+    List all dependencies of a specific package.
+
+    :param package_name: Name of the package to list dependencies for.
+    :return: A list of dependencies, or None if the package is not found.
+    """
+    try:
+        metadata = importlib.metadata.metadata(package_name)
+        requires = metadata.get_all('Requires-Dist', [])
+        return list(requires)
+    except importlib.metadata.PackageNotFoundError:
+        return None
+
+def get_outdated_packages():
+    """
+    Get a list of outdated packages in the current environment.
+
+    :return: A list of dictionaries containing package name, current version, and latest version.
+    """
+    try:
+        result = subprocess.run([sys.executable, "-m", "pip", "list", "--outdated", "--format=json"], capture_output=True, text=True, check=True)
+        outdated_packages = json.loads(result.stdout)
+        return outdated_packages
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to get outdated packages. Error: {e}")
+        return []
+
+
+def install_package(package_name, version=None):
+    """
+    Install a package using pip.
+
+    :param package_name: Name of the package to install.
+    :param version: Optional version of the package to install.
+    :return: None
+    """
+    try:
+        if version:
+            package_spec = f"{package_name}=={version}"
+        else:
+            package_spec = package_name
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package_spec])
+        print(f"Package '{package_spec}' installed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install package '{package_name}'. Error: {e}")
+
+
+def upgrade_package(package_name):
+    """
+    Upgrade a package using pip.
+
+    :param package_name: Name of the package to upgrade.
+    :return: None
+    """
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
+        print(f"Package '{package_name}' upgraded successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to upgrade package '{package_name}'. Error: {e}")
+
+
+def uninstall_package(package_name):
+    """
+    Uninstall a package using pip.
+
+    :param package_name: Name of the package to uninstall.
+    :return: None
+    """
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "uninstall", package_name, "-y"])
+        print(f"Package '{package_name}' uninstalled successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to uninstall package '{package_name}'. Error: {e}")
+
 
 if __name__ == '__main__':
     print(get_installed_packages())  # List all installed packages
     print(get_package_metadata("requests"))  # Get metadata for 'requests' package
     print(is_version_compatible("requests", ">=2.25.0"))  # Check if 'requests' version is compatible
+
+    # Dependency checking
+    dependencies = list_package_dependencies("requests")
+    if dependencies is not None:
+        print(f"Dependencies for 'requests': {dependencies}")
+    else:
+        print("Package 'requests' not found.")
+
+
+    # Outdated Checks
+    outdated_packages = get_outdated_packages()
+    if outdated_packages:
+        print("Outdated packages:")
+        for pkg in outdated_packages:
+            print(f"{pkg['name']}: {pkg['version']} -> {pkg['latest_version']}")
+    else:
+        print("All packages are up to date.")
 
     # Example usage
     print(is_package_installed("requests"))  # Check if 'requests' is installed
