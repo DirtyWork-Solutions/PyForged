@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyforged"
-version = "0.2.3"
+version = "0.2.4"
 description = "The PyForged EcoSystem (core)."
 authors = [
     {name = "DirtyWork Solutions Limited", email = "pyforge-core@open.dirtywork.solutions"}
@@ -38,13 +38,13 @@ classifiers = [
 
 [project.optional-dependencies]
 suite = [
-    "bedrocked~=0.1.0",
-    "runecaller~=0.1.0",
+    "bedrocked~=0.1.4",
+    "runecaller~=0.1.4",
     "wardkeeper~=0.1.0"
 ]
 std = [
-    "bedrocked~=0.1.0",
-    "runecaller~=0.1.0",
+    "bedrocked~=0.1.4",
+    "runecaller~=0.1.4",
     "wardkeeper~=0.1.0"
 ]
 dev = []
