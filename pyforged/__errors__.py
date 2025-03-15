@@ -4,7 +4,7 @@ from typing import Callable
 
 
 # 4.1 Unified Exception Base Class
-class PyForagedException(Exception):
+class PyForgedException(Exception):
     """Base exception class for all PyForaged errors."""
     pass
 
