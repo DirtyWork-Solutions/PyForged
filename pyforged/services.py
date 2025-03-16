@@ -97,7 +97,7 @@ class ServiceRegistry:
             logging.info(f"Registering middleware for: {hook_name}")
             self._middleware[hook_name].append(middleware_func)
 
-    def get(self, service_name: str) -> Any:
+    async def get(self, service_name: str) -> Any:
         resolved_name = self._aliases.get(service_name, service_name)
         with self._lock:
             for hook in self._middleware['before_service_access']:
@@ -110,11 +110,11 @@ class ServiceRegistry:
                 try:
                     instance = self._factories[resolved_name]()
                     if asyncio.iscoroutine(instance):
-                        instance = asyncio.run(instance)
+                        instance = await instance
                     for hook in self._middleware['after_init']:
                         instance = hook(instance)
                     if self._lifecycle_hooks[resolved_name]['on_init']:
-                        self._lifecycle_hooks[resolved_name]['on_init'](instance)
+                        await self._lifecycle_hooks[resolved_name]['on_init'](instance)
                     if resolved_name in self._singletons:
                         self._singletons[resolved_name] = instance
                     return instance

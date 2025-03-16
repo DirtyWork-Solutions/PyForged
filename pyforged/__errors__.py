@@ -51,7 +51,7 @@ class CircuitBreaker:
 
     def call(self, func, *args, **kwargs):
         if self.is_open():
-            raise PyForagedException("Circuit breaker is open")
+            raise PyForgedException("Circuit breaker is open")
         try:
             result = func(*args, **kwargs)
             self.failures = 0  # Reset on success
@@ -80,4 +80,9 @@ class ErrorAggregator:
 
     def raise_if_any(self):
         if self.errors:
-            raise PyForagedException(self.errors)
+            raise PyForgedException(self.errors)
+
+# TODO: ErrorConvention
+
+class ErrorCatalogue:  # TODO: Make a singleton
+    pass
