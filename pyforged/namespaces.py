@@ -1,22 +1,21 @@
 """
-Namespace Manager Module
-
 This module provides a centralized way to manage namespaced keys and hierarchical structures
 for various components such as services, secrets, events, and other stored entities.
 
-Features:
-- Create and manage hierarchical namespaces.
-- Retrieve items based on fully qualified names.
-- List and organize items under structured namespaces.
-- Support for wildcard-based retrieval.
-- Thread-safe operations.
+**Features:**
+    - Create and manage hierarchical namespaces.
+    - Retrieve items based on fully qualified names.
+    - List and organize items under structured namespaces.
+    - Support for wildcard-based retrieval.
+    - Thread-safe operations.
 
-Usage:
-```python
-namespace_manager = NamespaceManager()
-namespace_manager.set("secrets.api.key", "super_secret_value")
-print(namespace_manager.get("secrets.api.key"))
-```
+
+**Usage:**
+
+    namespace_manager = NamespaceManager()
+    namespace_manager.set("secrets.api.key", "super_secret_value")
+    print(namespace_manager.get("secrets.api.key"))
+
 """
 
 import threading
