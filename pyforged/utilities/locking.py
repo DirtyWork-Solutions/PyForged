@@ -1,5 +1,3 @@
-# locking.py
-
 import threading
 import fcntl
 

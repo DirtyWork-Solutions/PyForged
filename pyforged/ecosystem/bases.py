@@ -1,11 +1,13 @@
 import os
 import json
+from abc import ABC, abstractmethod, abstractproperty
 from pathlib import Path
 import importlib.metadata
+from pyforged.utilities.misc import get_package_paths
 
 
 class PyForgeProjectRegistry:
-    REGISTRY_FILE = Path.home() / ".native.json"
+    REGISTRY_FILE = os.path.join(get_package_paths('pyforged'), "", ".native.json")
 
     def __init__(self):
         self._load_registry()
@@ -75,6 +77,8 @@ class PyForgeProjectRegistry:
             return f"Project '{project_id}' removed."
         return "Project not found."
 
+class BaseTaskQueue(ABC):
+    pass
 
 # Example Usage
 if __name__ == "__main__":

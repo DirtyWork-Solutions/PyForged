@@ -2,6 +2,7 @@ import importlib.metadata
 import importlib.util
 import json
 import sys
+from pathlib import Path
 from typing import Union, List, Dict
 import subprocess
 from packaging.version import Version, InvalidVersion
@@ -148,7 +149,7 @@ def get_package_paths(package_names: Union[str, List[str]]) -> Union[str, Dict[s
         spec = importlib.util.find_spec(package_name)
         if spec is None:
             return f"Package '{package_name}' not found."
-        return spec.origin
+        return str(Path(spec.origin).parent)
 
     if isinstance(package_names, str):
         return get_path(package_names)
@@ -156,7 +157,6 @@ def get_package_paths(package_names: Union[str, List[str]]) -> Union[str, Dict[s
         return {package_name: get_path(package_name) for package_name in package_names}
     else:
         raise TypeError("package_names must be a string or a list of strings")
-
 
 
 if __name__ == '__main__':
@@ -186,7 +186,5 @@ if __name__ == '__main__':
     print(is_package_installed("requests", "2.28.1"))  # Check if 'requests' version 2.28.1 is installed
 
     # Get path
-    package_name = "requests"
-    print(get_package_paths(package_name))
-    package_name = "requests"
-    print(get_package_paths(package_name))
+    print(get_package_paths("numpy"))  # Single package
+    print(get_package_paths(["numpy", "requests", "nonexistent_package"]))  # Multiple packages
