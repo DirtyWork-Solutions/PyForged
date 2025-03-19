@@ -1,7 +1,4 @@
 class DotDict(dict):
-    """
-    A dictionary subclass that allows access to keys via dot notation.
-    """
     def __getattr__(self, item: str):
         try:
             return self[item]
@@ -18,22 +15,13 @@ class DotDict(dict):
             raise AttributeError(f"'DotDict' object has no attribute '{item}'")
 
     def to_dict(self) -> dict:
-        """
-        Converts the DotDict back to a regular dictionary.
-        """
         return dict(self)
 
     def update_from_dict(self, other_dict: dict):
-        """
-        Updates the DotDict with key-value pairs from another dictionary.
-        """
         for key, value in other_dict.items():
             self[key] = value
 
     def get_nested(self, dot_key: str):
-        """
-        Retrieves a value from a nested dictionary using a dot-separated key.
-        """
         keys = dot_key.split('.')
         value = self
         for key in keys:
@@ -58,15 +46,49 @@ class DotDict(dict):
     def __setitem__(self, key: str, value):
         super().__setitem__(key, value)
 
+    def __delitem__(self, key: str):
+        super().__delitem__(key)
+
+    @classmethod
+    def from_dict(cls, source_dict: dict):
+        return cls(source_dict)
+
+    def __eq__(self, other):
+        if isinstance(other, DotDict):
+            return super().__eq__(other)
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def copy(self):
+        return DotDict(super().copy())
+
+    def deepcopy(self):
+        from copy import deepcopy
+        return DotDict(deepcopy(dict(self)))
+
+    def pop(self, key, default=None):
+        return super().pop(key, default)
+
+    def popitem(self):
+        return super().popitem()
+
+    def setdefault(self, key, default=None):
+        return super().setdefault(key, default)
+
+    def clear(self):
+        super().clear()
+
+
 class MetadataDict(DotDict):
     """
-    A dictionary subclass that allows access to keys via dot notation,
-    specifically designed for metadata handling.
-    """
+        A dictionary subclass that allows access to keys via dot notation,
+        specifically designed for metadata handling.
+        """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Additional initialization if needed
-
     def merge(self, other_dict):
         """
         Merges another dictionary into the MetadataDict.
@@ -148,3 +170,34 @@ class MetadataDict(DotDict):
         Returns a list of keys that start with the given prefix.
         """
         return [key for key in self.keys() if key.startswith(prefix)]
+
+    """
+                    A dictionary subclass that allows access to keys via dot notation.
+                    """
+    def __getattr__(self, item: str):
+        try:
+            return self[item]
+        except KeyError:
+            raise AttributeError(f"'DotDict' object has no attribute '{item}'")
+
+    def __setattr__(self, key: str, value):
+        self[key] = value
+
+    def __delattr__(self, item: str):
+        try:
+            del self[item]
+        except KeyError:
+            raise AttributeError(f"'DotDict' object has no attribute '{item}'")
+
+    def to_dict(self) -> dict:
+        """
+        Converts the DotDict back to a regular dictionary.
+        """
+        return dict(self)
+
+    def update_from_dict(self, other_dict: dict):
+        """
+        Updates the DotDict with key-value pairs from another dictionary.
+        """
+        for key, value in other_dict.items():
+            self[key] = value

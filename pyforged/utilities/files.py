@@ -23,6 +23,7 @@ def read_large_file(file_path):
         for line in f:
             yield line.strip()
 
+
 # 8.3 JSON/YAML/XML Serializer
 def serialize_json(obj):
     return json.dumps(obj, indent=2)
@@ -37,6 +38,7 @@ def serialize_xml(obj):
         child.text = str(v)
     return ET.tostring(root, encoding='unicode')
 
+
 # 8.4 Safe Temporary File Manager
 @contextmanager
 def temp_file():
@@ -45,6 +47,7 @@ def temp_file():
         yield temp.name
     finally:
         os.unlink(temp.name)
+
 
 # 8.5 Directory Watcher
 class DirectoryWatcher:

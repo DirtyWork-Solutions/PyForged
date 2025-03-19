@@ -1,7 +1,8 @@
 import importlib.metadata
+import importlib.util
 import json
 import sys
-from typing import Union, List
+from typing import Union, List, Dict
 import subprocess
 from packaging.version import Version, InvalidVersion
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
@@ -136,6 +137,28 @@ def uninstall_package(package_name):
         print(f"Failed to uninstall package '{package_name}'. Error: {e}")
 
 
+def get_package_paths(package_names: Union[str, List[str]]) -> Union[str, Dict[str, str]]:
+    """
+    Get the installation path(s) for one or multiple packages.
+
+    :param package_names: A single package name or a list of package names.
+    :return: A single path if a single package name is provided, or a dictionary with package names as keys and their paths as values if a list is provided.
+    """
+    def get_path(package_name: str) -> str:
+        spec = importlib.util.find_spec(package_name)
+        if spec is None:
+            return f"Package '{package_name}' not found."
+        return spec.origin
+
+    if isinstance(package_names, str):
+        return get_path(package_names)
+    elif isinstance(package_names, list):
+        return {package_name: get_path(package_name) for package_name in package_names}
+    else:
+        raise TypeError("package_names must be a string or a list of strings")
+
+
+
 if __name__ == '__main__':
     print(get_installed_packages())  # List all installed packages
     print(get_package_metadata("requests"))  # Get metadata for 'requests' package
@@ -161,3 +184,9 @@ if __name__ == '__main__':
     # Example usage
     print(is_package_installed("requests"))  # Check if 'requests' is installed
     print(is_package_installed("requests", "2.28.1"))  # Check if 'requests' version 2.28.1 is installed
+
+    # Get path
+    package_name = "requests"
+    print(get_package_paths(package_name))
+    package_name = "requests"
+    print(get_package_paths(package_name))
