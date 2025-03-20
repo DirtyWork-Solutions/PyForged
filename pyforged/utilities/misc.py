@@ -1,6 +1,7 @@
 import importlib.metadata
 import importlib.util
 import json
+import logging
 import sys
 from pathlib import Path
 from typing import Union, List, Dict
@@ -16,6 +17,7 @@ def is_package_installed(package_name, version=None):
     :param version: Optional version of the package to check.
     :return: True if the package (and version, if specified) is installed, False otherwise.
     """
+    logging.info(f"Checking if '{package_name}' is enabled.")
     try:
         installed_version = importlib.metadata.version(package_name)
         if version:
@@ -105,9 +107,9 @@ def install_package(package_name, version=None):
         else:
             package_spec = package_name
         subprocess.check_call([sys.executable, "-m", "pip", "install", package_spec])
-        print(f"Package '{package_spec}' installed successfully.")
+        logging.info(f"Package '{package_spec}' installed successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install package '{package_name}'. Error: {e}")
+        logging.error(f"Failed to install package '{package_name}'. Error: {e}")
 
 
 def upgrade_package(package_name):
@@ -119,9 +121,9 @@ def upgrade_package(package_name):
     """
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
-        print(f"Package '{package_name}' upgraded successfully.")
+        logging.info(f"Package '{package_name}' upgraded successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to upgrade package '{package_name}'. Error: {e}")
+        logging.error(f"Failed to upgrade package '{package_name}'. Error: {e}")
 
 
 def uninstall_package(package_name):

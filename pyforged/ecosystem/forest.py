@@ -1,10 +1,12 @@
 import dataclasses
+import logging
 import os
 import socket
 import threading
 from typing import Any, Dict
 
 from pyforged.utilities.misc import is_package_installed
+from pyforged.namespaces import NamespaceManager
 
 
 class PyForgedEcosystem:
@@ -63,6 +65,7 @@ class PyForgedEcosystem:
 
     def is_project_enabled(self, feature: str) -> bool:
         """Check if a feature flag is enabled."""
+        logging.debug(f"Checking if '{feature}' is enabled...")
         return self._metadata["project_flags"].get(feature, False)
 
 
