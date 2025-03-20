@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import tempfile
@@ -5,11 +6,10 @@ import time
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 from pathlib import Path
-
+from typing import Optional
 import yaml
 
 
-# 8.1 Atomic File Writer
 @contextmanager
 def atomic_write(file_path):
     temp_path = file_path + ".tmp"
@@ -17,14 +17,14 @@ def atomic_write(file_path):
         yield temp_file
     os.replace(temp_path, file_path)
 
-# 8.2 Efficient Large File Reader
+# 1. Efficient Large File Reader
 def read_large_file(file_path):
     with open(file_path, 'r') as f:
         for line in f:
             yield line.strip()
 
 
-# 8.3 JSON/YAML/XML Serializer
+# 2. JSON/YAML/XML Serializer
 def serialize_json(obj):
     return json.dumps(obj, indent=2)
 
@@ -39,7 +39,7 @@ def serialize_xml(obj):
     return ET.tostring(root, encoding='unicode')
 
 
-# 8.4 Safe Temporary File Manager
+# 3. Safe Temporary File Manager
 @contextmanager
 def temp_file():
     temp = tempfile.NamedTemporaryFile(delete=False)
@@ -49,15 +49,30 @@ def temp_file():
         os.unlink(temp.name)
 
 
-# 8.5 Directory Watcher
+
+# 4.
 class DirectoryWatcher:
     def __init__(self, directory):
         self.directory = Path(directory)
 
-    def watch(self, callback):
+    async def watch(self, callback):
         before = set(self.directory.iterdir())
         while True:
-            time.sleep(1)
+            await asyncio.sleep(1)
+            after = set(self.directory.iterdir())
+            changes = after - before
+            if changes:
+                if asyncio.iscoroutinefunction(callback):
+                    await callback(changes)
+                else:
+                    callback(changes)
+            before = after
+
+    def watch_sync(self, callback, interval: Optional[int]):
+        pause_secs = interval if interval else 1
+        before = set(self.directory.iterdir())
+        while True:
+            time.sleep(pause_secs)
             after = set(self.directory.iterdir())
             changes = after - before
             if changes:
