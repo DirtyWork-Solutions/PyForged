@@ -1,6 +1,197 @@
+"""
+This module provides utilities for working with text/strings such as converting strings into various naming conventions
+(commonly referred to as "cases"), including but not limited to:
+- snake_case
+- camelCase
+- PascalCase
+- kebab-case
+- SCREAMING-KEBAB-CASE
+- COBOL-CASE (alias)
+- Train-Case
+- Title Case
+- dot.case
+- space case
+- slash/case
+- backslash\case
+- mixed delimiter case
+"""
+
 import re
 
-# 7.1 Slug Generator
+class CaseTransformer:
+    """
+    A utility class that transforms input strings into various casing styles.
+
+    Usage:
+        CaseTransformer.to_snake_case("MyExampleString")  -> "my_example_string"
+        CaseTransformer.to_pascal_case("my_example_string") -> "MyExampleString"
+    """
+
+    @staticmethod
+    def to_snake_case(text: str) -> str:
+        """
+        Converts the input text to snake_case.
+
+        Example:
+            "MyTestString" -> "my_test_string"
+        """
+        return "_".join(CaseTransformer._normalize_text(text)).lower()
+
+    @staticmethod
+    def to_upper_snake_case(text: str) -> str:
+        """
+        Converts the input text to UPPER_SNAKE_CASE.
+
+        Example:
+            "MyTestString" -> "MY_TEST_STRING"
+        """
+        return "_".join(CaseTransformer._normalize_text(text)).upper()
+
+    @staticmethod
+    def to_camel_case(text: str) -> str:
+        """
+        Converts the input text to camelCase.
+
+        Example:
+            "MyTestString" -> "myTestString"
+        """
+        words = CaseTransformer._normalize_text(text)
+        return words[0].lower() + "".join(w.capitalize() for w in words[1:])
+
+    @staticmethod
+    def to_pascal_case(text: str) -> str:
+        """
+        Converts the input text to PascalCase.
+
+        Example:
+            "my_test_string" -> "MyTestString"
+        """
+        return "".join(w.capitalize() for w in CaseTransformer._normalize_text(text))
+
+    @staticmethod
+    def to_kebab_case(text: str) -> str:
+        """
+        Converts the input text to kebab-case (lowercase words joined with dashes).
+
+        Example:
+            "MyTestString" -> "my-test-string"
+        """
+        return "-".join(CaseTransformer._normalize_text(text)).lower()
+
+    @staticmethod
+    def to_screaming_kebab_case(text: str) -> str:
+        """
+        Converts the input text to SCREAMING-KEBAB-CASE (uppercase words joined with dashes).
+
+        Example:
+            "MyTestString" -> "MY-TEST-STRING"
+        """
+        return "-".join(CaseTransformer._normalize_text(text)).upper()
+
+    @staticmethod
+    def to_cobol_case(text: str) -> str:
+        """
+        Alias for SCREAMING-KEBAB-CASE. Used in legacy or enterprise systems.
+
+        Example:
+            "MyTestString" -> "MY-TEST-STRING"
+        """
+        return CaseTransformer.to_screaming_kebab_case(text)
+
+    @staticmethod
+    def to_train_case(text: str) -> str:
+        """
+        Converts the input text to Train-Case (Pascal-style kebab-case).
+
+        Example:
+            "my_test_string" -> "My-Test-String"
+        """
+        return "-".join(w.capitalize() for w in CaseTransformer._normalize_text(text))
+
+    @staticmethod
+    def to_title_case(text: str) -> str:
+        """
+        Converts the input text to Title Case (each word capitalized and space-separated).
+
+        Example:
+            "my_test_string" -> "My Test String"
+        """
+        return " ".join(w.capitalize() for w in CaseTransformer._normalize_text(text))
+
+    @staticmethod
+    def to_dot_case(text: str) -> str:
+        """
+        Converts the input text to dot.case (lowercase words joined with periods).
+
+        Example:
+            "MyTestString" -> "my.test.string"
+        """
+        return ".".join(CaseTransformer._normalize_text(text)).lower()
+
+    @staticmethod
+    def to_space_case(text: str) -> str:
+        """
+        Converts the input text to space case (lowercase words separated by spaces).
+
+        Example:
+            "MyTestString" -> "my test string"
+        """
+        return " ".join(CaseTransformer._normalize_text(text)).lower()
+
+    @staticmethod
+    def to_slash_case(text: str) -> str:
+        """
+        Converts the input text to slash/case (words separated by slashes).
+
+        Example:
+            "MyTestString" -> "my/test/string"
+        """
+        return "/".join(CaseTransformer._normalize_text(text)).lower()
+
+    @staticmethod
+    def to_backslash_case(text: str) -> str:
+        """
+        Converts the input text to backslash\case (words separated by backslashes).
+
+        Example:
+            "MyTestString" -> "my\\test\\string"
+        """
+        return "\\".join(CaseTransformer._normalize_text(text)).lower()
+
+    @staticmethod
+    def to_mixed_delimiter_case(text: str) -> str:
+        """
+        Converts the input text into a quirky mixed-delimiter format:
+        Underscore for first word, dash for second, dot for the rest.
+
+        Example:
+            "MyTestString" -> "my-test.string"
+        """
+        cleaned = CaseTransformer._normalize_text(text)
+        if len(cleaned) > 2:
+            return "_".join(cleaned[:1]) + "-" + cleaned[1] + "." + ".".join(cleaned[2:])
+        elif len(cleaned) == 2:
+            return "_".join(cleaned[:1]) + "-" + cleaned[1]
+        return "_".join(cleaned)
+
+    @staticmethod
+    def _normalize_text(text: str) -> list:
+        """
+        Internal utility method to normalize and split text into words:
+        - Converts delimiters (underscore, hyphen, dot, slash, backslash) to spaces
+        - Splits camelCase and PascalCase
+        - Lowercases and splits into a list of words
+
+        Example:
+            "myTestString-Example" -> ['my', 'test', 'string', 'example']
+        """
+        text = re.sub(r'[_\-.\\/]', ' ', text)
+        text = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', text)
+        text = re.sub(r'(?<=[A-Z])(?=[A-Z][a-z])', ' ', text)
+        return text.lower().split()
+
+
+# 1. Slug Generator
 def slugify(text: str) -> str:
     """
     Converts a given text to a URL-friendly slug.
@@ -13,45 +204,8 @@ def slugify(text: str) -> str:
     """
     return re.sub(r'[^a-zA-Z0-9]+', '-', text.lower()).strip('-')
 
-# 7.2 Camel Case Converter
-def to_camel_case(text: str) -> str:
-    """
-    Converts a given text to camel case.
+# 2.
 
-    Args:
-        text (str): The input text to be converted.
-
-    Returns:
-        str: The camel case version of the input text.
-    """
-    words = re.split(r'[^a-zA-Z0-9]', text)
-    return words[0].lower() + ''.join(word.capitalize() for word in words[1:])
-
-# 7.3 Snake Case Converter
-def to_snake_case(text: str) -> str:
-    """
-    Converts a given text to snake case.
-
-    Args:
-        text (str): The input text to be converted.
-
-    Returns:
-        str: The snake case version of the input text.
-    """
-    return re.sub(r'[^a-zA-Z0-9]+', '_', text).lower()
-
-# 7.4 Kebab Case Converter
-def to_kebab_case(text: str) -> str:
-    """
-    Converts a given text to kebab case.
-
-    Args:
-        text (str): The input text to be converted.
-
-    Returns:
-        str: The kebab case version of the input text.
-    """
-    return re.sub(r'[^a-zA-Z0-9]+', '-', text).lower()
 
 # 7.5 Regex Utility Collection
 COMMON_PATTERNS = {

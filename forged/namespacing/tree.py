@@ -20,7 +20,7 @@ def render_namespace_tree(node, prefix: str = "", is_last: bool = True, depth: i
 
 def print_namespace(namespace):
     """Print the namespace starting from its root node."""
-    print(namespace.name)  # e.g., 'root'
-    lines = render_namespace_tree(namespace.root)
+    print(namespace)  # e.g., 'root'
+    lines = render_namespace_tree(namespace)
     for line in lines:
         print(line)

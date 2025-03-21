@@ -2,7 +2,7 @@ import unittest
 import json
 import yaml
 import os
-from pyforged.commons.patterns.mixins import JSONSerializedBasic, YAMLSerializedBasic, SerializedMixin, BasicSingleton, ObservableMixin, ReprMixin
+from forged.commons.patterns.mixins import JSONSerializedBasic, YAMLSerializedBasic, SerializedMixin, BasicSingleton, ObservableMixin, ReprMixin
 
 class TestMixins(unittest.TestCase):
 

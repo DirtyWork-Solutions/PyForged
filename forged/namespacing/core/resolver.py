@@ -1,6 +1,6 @@
 from typing import Any, Optional, Callable, List, Tuple
 
-from forged.namespacing import Symbol
+from forged.namespacing.core.symbol import Symbol
 from forged.namespacing.core.node import NamespaceNode
 from forged.namespacing.core.utils import split_path
 

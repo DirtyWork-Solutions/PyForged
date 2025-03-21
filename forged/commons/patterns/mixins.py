@@ -176,11 +176,13 @@ class ObservableMixin:
         """
         Notify all observers of an event.
 
+
+
         :param args: Positional arguments to pass to the observers.
         :param kwargs: Keyword arguments to pass to the observers.
         """
         for observer in self._observers:
-            observer.update(*args, **kwargs)
+            observer.spots(*args, **kwargs)
 
 
 class ReprMixin:

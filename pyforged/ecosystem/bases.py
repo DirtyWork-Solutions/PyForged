@@ -7,14 +7,17 @@ from pyforged.utilities.misc import get_package_paths
 
 
 class PyForgeProjectRegistry:
-    REGISTRY_FILE = os.path.join(get_package_paths('pyforged'), "", ".native.json")
+    REGISTRY_FILE = os.path.join(os.getcwd(), "native.json")
 
-    def __init__(self):
-        self._load_registry()
+    def __init__(self, from_path: str = 'native.json'):
+        self._load_registry(from_path)
 
-    def _load_registry(self):
-        if self.REGISTRY_FILE.exists():
-            with open(self.REGISTRY_FILE, "r") as f:
+    def _load_registry(self, path: str | None = None):
+        # Pre-checks
+        if path is None:
+            path
+        if os.path.exists(path):
+            with open(path, "r") as f:  # TODO: Use utility tools here
                 self.registry = json.load(f)
         else:
             self.registry = {}
@@ -76,6 +79,14 @@ class PyForgeProjectRegistry:
             self._save_registry()
             return f"Project '{project_id}' removed."
         return "Project not found."
+
+
+    def __str__(self):
+        return str(self.registry)
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class BaseTaskQueue(ABC):
     pass

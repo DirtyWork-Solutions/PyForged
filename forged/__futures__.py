@@ -20,8 +20,8 @@ Entries here have now fully moved into the production codebase.
 """
 
 
-from pyforged.commons.patterns.undefined import DotDict
-from pyforged.services import ServiceRegistry
+from forged.commons.patterns.undefined import DotDict
+
 
 class Namespace(DotDict):
     pass

@@ -7,18 +7,32 @@ from typing import Any, Dict
 
 from pyforged.utilities.misc import is_package_installed
 from pyforged.namespaces import NamespaceManager
+from pyforged.ecosystem.bases import PyForgeProjectRegistry
+
+def load_native_registry():
+    registry = PyForgeProjectRegistry()
+    import json
+
+    # Open and read the JSON file
+    with open(os.path.join(os.getcwd(), "native.json"), 'r') as file:
+        data = json.load(file)
+
+    return PyForgeProjectRegistry().registry
+
+#
+NATIVE_PROJECTS = load_native_registry()
 
 
-class PyForgedEcosystem:
+class ForgedEcosystem:
     """A singleton-based manager for storing and retrieving application metadata."""
 
     _instance = None
     _lock = threading.Lock()
-
+    _native_projects = NATIVE_PROJECTS
     def __new__(cls):
         with cls._lock:
             if cls._instance is None:
-                cls._instance = super(PyForgedEcosystem, cls).__new__(cls)
+                cls._instance = super(ForgedEcosystem, cls).__new__(cls)
                 cls._instance._metadata = {
                     "app_name": "My Application",
                     "version": "1.0.0",
@@ -71,7 +85,7 @@ class PyForgedEcosystem:
 
 # Example usage
 if __name__ == "__main__":
-    meta = PyForgedEcosystem()
+    meta = ForgedEcosystem()
     print("App Name:", meta.get("app_name"))
     print("Environment:", meta.get("environment"))
 
