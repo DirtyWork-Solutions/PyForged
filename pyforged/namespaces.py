@@ -24,10 +24,32 @@ import re
 import time
 import collections
 
+class NamespaceValidator:
+    """A utility class for validating namespace keys."""
+
+    @staticmethod
+    def key(name: str) -> bool:
+        """Validate the namespace key format.
+
+        Args:
+            name (str): The hierarchical key to validate.
+
+        Returns:
+            bool: True if the namespace is valid, False otherwise.
+        """
+        pattern = r'^[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*$'
+        return bool(re.match(pattern, name))
+
+    @staticmethod
+    def space(name: str) -> bool:  # TODO: Introduce traversal checks
+        pattern = r'^[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*$'
+        return bool(re.match(pattern, name))
+
 class NamespaceManager:
     """A thread-safe manager for handling namespaced items in a hierarchical structure."""
     _instance = None
     _lock = threading.Lock()
+    _validator = NamespaceValidator()
 
     def __new__(cls):
         with cls._lock:
@@ -37,7 +59,6 @@ class NamespaceManager:
                 cls._instance._metadata = {}
                 cls._instance._aliases = {}
                 cls._instance._versions = collections.defaultdict(list)
-                cls._instance._permissions = {}
                 cls._instance._expirations = {}
                 cls._instance._namespace_lock = threading.RLock()
             return cls._instance
@@ -51,8 +72,7 @@ class NamespaceManager:
         Returns:
             bool: True if the namespace is valid, False otherwise.
         """
-        pattern = r'^[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*$'
-        return bool(re.match(pattern, namespace))
+        return self._validator.key(namespace)
 
     def _resolve_alias(self, namespace: str) -> str:
         """Resolve the namespace alias to its actual namespace.
@@ -98,62 +118,10 @@ class NamespaceManager:
         with self._namespace_lock:
             self._aliases.pop(alias, None)
 
-    def set_permission(self, namespace: str, role: str, permission: str) -> None:
-        """Set a permission for a namespace.
-
-        Args:
-            namespace (str): The hierarchical key.
-            role (str): The role to set the permission for.
-            permission (str): The permission to set (e.g., 'read', 'write').
-        """
-        if not self._validate_namespace(namespace):
-            raise ValueError(f"Invalid namespace format: {namespace}")
-        with self._namespace_lock:
-            self._permissions.setdefault(namespace, {}).setdefault(role, set()).add(permission)
-
-    def get_permissions(self, namespace: str) -> Dict[str, List[str]]:
-        """Get all permissions for a namespace.
-
-        Args:
-            namespace (str): The hierarchical key.
-
-        Returns:
-            Dict[str, List[str]]: A dictionary of roles and their permissions.
-        """
-        namespace = self._resolve_alias(namespace)
-        with self._namespace_lock:
-            return {role: list(perms) for role, perms in self._permissions.get(namespace, {}).items()}
-
-    def check_permission(self, namespace: str, role: str, permission: str) -> bool:
-        """Check if a role has a specific permission for a namespace.
-
-        Args:
-            namespace (str): The hierarchical key.
-            role (str): The role to check.
-            permission (str): The permission to check.
-
-        Returns:
-            bool: True if the role has the permission, False otherwise.
-        """
-        namespace = self._resolve_alias(namespace)
-        with self._namespace_lock:
-            return permission in self._permissions.get(namespace, {}).get(role, set())
-
-    def set(self, namespace: str, value: Any, description: str = "", role: str = "admin", ttl: int = None) -> None:
-        """Store a value under a structured namespace with metadata, versioning, and optional expiration.
-
-        Args:
-            namespace (str): The hierarchical key (e.g., 'services.cache.config').
-            value (Any): The value to store.
-            description (str, optional): A description of the namespace.
-            role (str, optional): The role performing the operation.
-            ttl (int, optional): Time-to-live in seconds for the namespace.
-        """
+    def set(self, namespace: str, value: Any, description: str = "", ttl: int = None) -> None:
         namespace = self._resolve_alias(namespace)
         if not self._validate_namespace(namespace):
             raise ValueError(f"Invalid namespace format: {namespace}")
-        if not self.check_permission(namespace, role, "write"):
-            raise PermissionError(f"Role '{role}' does not have write permission for namespace '{namespace}'")
 
         with self._namespace_lock:
             keys = namespace.split(".")
@@ -162,39 +130,23 @@ class NamespaceManager:
                 ref = ref.setdefault(key, {})
             ref[keys[-1]] = value
 
-            # Store metadata
             self._metadata[namespace] = {
                 "created_at": time.time(),
                 "updated_at": time.time(),
                 "description": description
             }
 
-            # Store version
             self._versions[namespace].append((time.time(), value))
 
-            # Set expiration if ttl is provided
             if ttl is not None:
                 self._expirations[namespace] = time.time() + ttl
 
-    def get(self, namespace: str, default: Any = None, role: str = "admin") -> Any:
-        """Retrieve a value from a structured namespace.
-
-        Args:
-            namespace (str): The hierarchical key.
-            default (Any, optional): The default value if the key is not found.
-            role (str, optional): The role performing the operation.
-
-        Returns:
-            Any: The stored value or the default.
-        """
+    def get(self, namespace: str, default: Any = None) -> Any:
         namespace = self._resolve_alias(namespace)
-        if not self.check_permission(namespace, role, "read"):
-            raise PermissionError(f"Role '{role}' does not have read permission for namespace '{namespace}'")
 
         with self._namespace_lock:
-            # Check for expiration
             if namespace in self._expirations and time.time() > self._expirations[namespace]:
-                self.delete(namespace, role)
+                self.delete(namespace)
                 return default
 
             keys = namespace.split(".")
@@ -246,16 +198,8 @@ class NamespaceManager:
                     self.set(namespace, val)
                     break
 
-    def delete(self, namespace: str, role: str = "admin") -> None:
-        """Remove a value from the structured namespace and its metadata.
-
-        Args:
-            namespace (str): The hierarchical key.
-            role (str, optional): The role performing the operation.
-        """
+    def delete(self, namespace: str) -> None:
         namespace = self._resolve_alias(namespace)
-        if not self.check_permission(namespace, role, "write"):
-            raise PermissionError(f"Role '{role}' does not have write permission for namespace '{namespace}'")
 
         with self._namespace_lock:
             keys = namespace.split(".")
@@ -316,12 +260,43 @@ class NamespaceManager:
         from fnmatch import fnmatch
         return fnmatch(key, pattern)
 
+
+    def list_all_namespaces(self) -> List[str]:
+        """List all available namespaces in the hierarchical structure.
+
+        Returns:
+            List[str]: A list of all available namespaces.
+        """
+        def collect_namespaces(namespace_dict, path, collected):
+            for key, value in namespace_dict.items():
+                new_path = f"{path}.{key}" if path else key
+                collected.append(new_path)
+                if isinstance(value, dict):
+                    collect_namespaces(value, new_path, collected)
+
+        collected_namespaces = []
+        with self._namespace_lock:
+            collect_namespaces(self._namespaces, "", collected_namespaces)
+        return collected_namespaces
+
+
+
 # Example usage
 if __name__ == "__main__":
     ns_manager = NamespaceManager()
-    ns_manager.set_permission("services.database.connection", "admin", "read")
-    ns_manager.set_permission("services.database.connection", "admin", "write")
-    ns_manager.set("services.database.connection", "postgres://user:pass@localhost/db", "Database connection string", role="admin", ttl=10)
-    print(ns_manager.get("services.database.connection", role="admin"))  # Should print the database connection string
-    time.sleep(11)
-    print(ns_manager.get("services.database.connection", role="admin"))  # Should print None as the value has expiredget("services.database.connection", role="admin"))  # Should print None
+    # ns_manager.set_permission("services.database.connection")
+    # ns_manager.set_permission("services.database.connection")
+    ns_manager.set("services.database.connection", "postgres://user:pass@localhost/db", "Database connection string")
+    ns_manager.set("services.database.config", "testing", "Database connection string")
+    ns_manager.set("services.database.tested.a", "whooop", "Database connection string")
+    ns_manager.set("services.database.tested.b", value={"test": 1}, description="Database connection string")
+
+
+    print(ns_manager.get("services.database.connection"))  # Should print the database connection string
+    time.sleep(1)
+    print(ns_manager.get("services"))
+    print(ns_manager.get("services.database.connection"))  # Should print None as the value has expiredget("services.database.connection", role="admin"))  # Should print None
+    print(ns_manager.get("services.*.config"))
+    print(ns_manager.get("services.database.tested.*"))
+    print(ns_manager.list_all_namespaces())  # Should print all available namespaces
+    print(ns_manager.get("services.database.tested.b.test"))

@@ -28,15 +28,23 @@ import asyncio
 from typing import Any, Callable, Dict, Type, Optional, Union, List
 from threading import RLock
 
+from pyforged.__errors__ import PyForgedException
+
 logging.basicConfig(level=logging.INFO)
 
+__all__ = [
+    'ServiceRegistry',
+    'ServiceInitializationException',
+    'ServiceNotRegisteredException'
+]
 
-class ServiceNotRegisteredException(Exception):
+
+class ServiceNotRegisteredException(PyForgedException):
     """Exception raised when a requested service is not registered."""
     pass
 
 
-class ServiceInitializationException(Exception):
+class ServiceInitializationException(PyForgedException):
     """Exception raised when a service fails to initialize."""
     pass
 

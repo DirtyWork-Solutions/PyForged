@@ -24,6 +24,8 @@ print(secrets_manager.get_secret("api_key"))
 ```
 """
 
+__all__ = ['SecretsManager']
+
 import threading
 import os
 import base64
