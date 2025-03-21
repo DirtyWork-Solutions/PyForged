@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from typing import List
 from uuid import UUID, uuid4
 
 
+#
 def get_new_id(use_this: str | UUID | None = None) -> str:
     """
 

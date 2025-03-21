@@ -2,7 +2,7 @@ import logging
 from abc import ABC
 
 
-
+#
 class BaseForgeProject(ABC):
     def __init__(self):
         self._meta = {
@@ -59,3 +59,12 @@ class BaseForgeProject(ABC):
         except Exception as e:
             print(e)
 
+
+#
+class BaseTask(ABC):
+    pass
+
+
+#
+class BaseQueue(ABC):
+    pass

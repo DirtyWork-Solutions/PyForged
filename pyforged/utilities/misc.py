@@ -9,6 +9,7 @@ import subprocess
 from packaging.version import Version, InvalidVersion
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 
+
 def is_package_installed(package_name, version=None):
     """
     Check if a particular package (optionally by version) is currently installed.
@@ -26,8 +27,6 @@ def is_package_installed(package_name, version=None):
     except importlib.metadata.PackageNotFoundError:
         return False
 
-
-
 def get_installed_packages():
     """
     List all installed packages.
@@ -41,7 +40,7 @@ def get_package_metadata(package_name) -> Union[dict, None]:
     Retrieve metadata for a specific package.
 
     :param package_name: Name of the package to retrieve metadata for.
-    :return: A dictionary containing the package metadata, or None if the package is not found.
+    :return: A dictionary containing the package metadata, or Nletone if the package is not found.
     """
     try:
         metadata = importlib.metadata.metadata(package_name)
@@ -80,7 +79,7 @@ def list_package_dependencies(package_name: str) -> Union[List[str], None]:
 
 def get_outdated_packages():
     """
-    Get a list of outdated packages in the current environment.
+    Get a **list** of outdated packages in the current environment.
 
     :return: A list of dictionaries containing package name, current version, and latest version.
     """
@@ -91,7 +90,6 @@ def get_outdated_packages():
     except subprocess.CalledProcessError as e:
         print(f"Failed to get outdated packages. Error: {e}")
         return []
-
 
 def install_package(package_name, version=None):
     """
@@ -111,7 +109,6 @@ def install_package(package_name, version=None):
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to install package '{package_name}'. Error: {e}")
 
-
 def upgrade_package(package_name):
     """
     Upgrade a package using pip.
@@ -124,21 +121,6 @@ def upgrade_package(package_name):
         logging.info(f"Package '{package_name}' upgraded successfully.")
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to upgrade package '{package_name}'. Error: {e}")
-
-
-def uninstall_package(package_name):
-    """
-    Uninstall a package using pip.
-
-    :param package_name: Name of the package to uninstall.
-    :return: None
-    """
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "uninstall", package_name, "-y"])
-        print(f"Package '{package_name}' uninstalled successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to uninstall package '{package_name}'. Error: {e}")
-
 
 def get_package_paths(package_names: Union[str, List[str]]) -> Union[str, Dict[str, str]]:
     """
@@ -159,6 +141,19 @@ def get_package_paths(package_names: Union[str, List[str]]) -> Union[str, Dict[s
         return {package_name: get_path(package_name) for package_name in package_names}
     else:
         raise TypeError("package_names must be a string or a list of strings")
+
+def uninstall_package(package_name):
+    """
+    Uninstall a package using pip.
+
+    :param package_name: Name of the package to uninstall.
+    :return: None
+    """
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "uninstall", package_name, "-y"])
+        print(f"Package '{package_name}' uninstalled successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to uninstall package '{package_name}'. Error: {e}")
 
 
 if __name__ == '__main__':
