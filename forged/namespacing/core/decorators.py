@@ -85,6 +85,9 @@ def bind_class_methods(cls=None, *, tags: Optional[Dict[str, Any]] = None):
 
             _pending_class_regs.remove(item)
 
+            # Clear the list after processing
+        _pending_class_regs.clear()
+
         return klass
 
     return wrapper(cls) if cls else wrapper

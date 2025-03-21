@@ -4,6 +4,12 @@ from forged.namespacing.core.symbol import Symbol
 from forged.namespacing.core.node import NamespaceNode
 from forged.namespacing.core.utils import split_path
 
+_conflict_modes = [
+    'soft',
+    'strict',
+    'chain',
+    'replace'
+]
 
 class Resolver:
     def __init__(self):
@@ -14,8 +20,18 @@ class Resolver:
         if self.conflict_mode == "replace":
             return  # allow overwrite
         elif self.conflict_mode == "chain":
-            # TODO: chain values (e.g. append to list or callable chain)
-            pass
+            if isinstance(existing_node.symbol.value, list):
+                existing_node.symbol.value.append(new_value)
+            elif callable(existing_node.symbol.value) and callable(new_value):
+                original_callable = existing_node.symbol.value
+
+                def chained_callable(*args, **kwargs):
+                    original_callable(*args, **kwargs)
+                    new_value(*args, **kwargs)
+
+                existing_node.symbol.value = chained_callable
+            else:
+                existing_node.symbol.value = [existing_node.symbol.value, new_value]
         else:
             raise ValueError(f"Conflict at {path}: symbol already exists.")
 

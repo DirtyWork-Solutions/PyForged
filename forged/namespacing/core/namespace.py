@@ -75,10 +75,27 @@ class Namespace:
 
     def list(self, prefix: str = ""):
         """List all registered paths under a prefix."""
-        ...
 
-    def to_dict(self):  # TODO: Optionally exclude the root
+        def collect_paths(node, current_path):
+            paths = []
+            if node.symbol:
+                paths.append(current_path)
+            for child_name, child_node in node.children.items():
+                paths.extend(collect_paths(child_node, f"{current_path}.{child_name}" if current_path else child_name))
+            return paths
+
+        parts = split_path(prefix)
+        current = self.root
+        for part in parts:
+            current = current.get_child(part)
+            if not current:
+                return []
+
+        return collect_paths(current, prefix)
+
+    def to_dict(self, exclude_root: bool = False):
         """Export namespace to dictionary form."""
+
         def node_to_dict(node):
             data = {}
             if node.symbol:
@@ -90,7 +107,11 @@ class Namespace:
                 data[child_name] = node_to_dict(child_node)
             return data
 
-        return {self.name: node_to_dict(self.root)}
+        namespace_dict = node_to_dict(self.root)
+        if exclude_root:
+            return namespace_dict
+
+        return {self.name: namespace_dict}
 
     def from_dict(self, data: dict):
         def load_node(node_data, parent_node):
