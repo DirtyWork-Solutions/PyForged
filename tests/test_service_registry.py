@@ -1,5 +1,5 @@
 import unittest
-from pyforged.services import ServiceRegistry, ServiceNotRegisteredException, ServiceInitializationException
+from pyforged import ServiceRegistry, ServiceNotRegisteredException, ServiceInitializationException
 
 class TestServiceRegistry(unittest.TestCase):
 

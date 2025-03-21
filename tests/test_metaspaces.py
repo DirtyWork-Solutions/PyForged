@@ -1,5 +1,5 @@
 import unittest
-from pyforged.metaspaces import MetaManager
+from pyforged import MetaManager
 
 class TestMetaManager(unittest.TestCase):
 

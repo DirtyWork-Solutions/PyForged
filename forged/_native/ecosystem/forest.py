@@ -2,9 +2,8 @@
 
 """
 from forged.commons.patterns.undefined import DotDict
-from pyforged.namespaces import NamespaceManager
-from pyforged.ecosystem.bases import PyForgeProjectRegistry
-from pyforged.__bases__ import BaseForgeProject
+from pyforged import NamespaceManager
+from forged._old.ecosystem import PyForgeProjectRegistry
 
 #
 
