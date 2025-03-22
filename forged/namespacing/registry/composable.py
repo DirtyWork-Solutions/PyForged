@@ -1,4 +1,7 @@
-class CompositeNamespace:
+from forged.__bases__ import BaseNamespace
+
+
+class CompositeNamespace(BaseNamespace):
     def __init__(self, *namespaces, name="composite"):
         self.name = name
         self.layers = []  # list of (namespace, read_only, priority)
@@ -113,3 +116,4 @@ class CompositeNamespace:
 
         mounted = MountedNamespace(mount_path, sub_namespace)
         self.append_layer(mounted)
+

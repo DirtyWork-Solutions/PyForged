@@ -13,28 +13,36 @@ injecting dependencies and managing service lifecycles.
     - ServiceRegistry:
       A registry for managing services, factories, middleware, and health checks.
 
+    - ServiceLifecycleManager:
+      Manages the lifecycle of services, including initialization and shutdown.
 
-**Functions:**
-    - *check_all_services_health:*
-      Checks the health of all registered services.
+    - ServiceHealthManager:
+      Manages health checks for services, including periodic health checks.
 
-    - *periodic_health_check:*
-      Periodically checks the health of all registered services.
+    - ServiceMiddlewareManager:
+      Manages middleware functions for services, including registration and removal.
+
+    - ServiceFactoryManager:
+      Manages service factories, including registration and retrieval.
 """
 
-import logging
+from loguru import logger
 import asyncio
 from typing import Any, Callable, Dict, Optional, Union, List
 from threading import RLock
+from abc import ABC, abstractmethod
 
 from forged.__errors__ import PyForgedException
 
-logging.basicConfig(level=logging.INFO)
 
 __all__ = [
     'ServiceRegistry',
     'ServiceInitializationException',
-    'ServiceNotRegisteredException'
+    'ServiceNotRegisteredException',
+    'ServiceLifecycleManager',
+    'ServiceHealthManager',
+    'ServiceMiddlewareManager',
+    'ServiceFactoryManager'
 ]
 
 
@@ -46,6 +54,33 @@ class ServiceNotRegisteredException(PyForgedException):
 class ServiceInitializationException(PyForgedException):
     """Exception raised when a service fails to initialize."""
     pass
+
+
+class IService(ABC):
+    @abstractmethod
+    def execute(self) -> str:
+        pass
+
+
+class ServiceA(IService):
+    def execute(self) -> str:
+        return "ServiceA executed"
+
+
+class ServiceB(IService):
+    def execute(self) -> str:
+        return "ServiceB executed"
+
+
+class DIContainer:
+    def __init__(self):
+        self._services = {}
+
+    def register(self, name: str, service: IService):
+        self._services[name] = service
+
+    def resolve(self, name: str) -> IService:
+        return self._services[name]
 
 
 class ServiceRegistry:
@@ -105,7 +140,7 @@ class ServiceRegistry:
             metadata (Optional[Dict[str, Any]], optional): Metadata for the service. Defaults to None.
         """
         with self._lock:
-            logging.info(f"Registering service: {service_name}")
+            logger.info(f"Registering service: {service_name}")
             if singleton:
                 self._singletons[service_name] = instance
             elif scope:
@@ -120,7 +155,6 @@ class ServiceRegistry:
             if dependencies:
                 for dependency in dependencies:
                     self.get(dependency)
-
 
     def register_factory(self, service_name: str, factory: Union[Callable[..., Any], Callable[..., asyncio.Future]],
                          singleton: bool = True, scope: Optional[str] = None, aliases: Optional[List[str]] = None,
@@ -141,7 +175,7 @@ class ServiceRegistry:
             metadata (Optional[Dict[str, Any]], optional): Metadata for the service. Defaults to None.
         """
         with self._lock:
-            logging.info(f"Registering factory for service: {service_name}")
+            logger.info(f"Registering factory for service: {service_name}")
             self._factories[service_name] = factory
             if singleton:
                 self._singletons[service_name] = None
@@ -154,7 +188,6 @@ class ServiceRegistry:
                 for alias in aliases:
                     self._aliases[alias] = service_name
 
-
     def middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]) -> None:
         """
         Registers a middleware function for a specific hook.
@@ -164,9 +197,8 @@ class ServiceRegistry:
             middleware_func (Callable[[Any], Any]): The middleware function.
         """
         if hook_name in self._middleware:
-            logging.info(f"Registering middleware for: {hook_name}")
+            logger.info(f"Registering middleware for: {hook_name}")
             self._middleware[hook_name].append(middleware_func)
-
 
     async def get(self, service_name: str) -> Any:
         """
@@ -250,7 +282,174 @@ class ServiceRegistry:
             for service_name in self.list_services():
                 try:
                     health_status = self.check_health(service_name)
-                    logging.info(f"Health check for {service_name}: {'Healthy' if health_status else 'Unhealthy'}")
+                    logger.info(f"Health check for {service_name}: {'Healthy' if health_status else 'Unhealthy'}")
                 except ServiceNotRegisteredException as e:
-                    logging.error(e)
+                    logger.error(e)
             await asyncio.sleep(interval)
+
+    def list_services(self) -> List[str]:
+        """Lists all registered services."""
+        with self._lock:
+            return list(self._services.keys())
+
+    def unregister(self, service_name: str) -> None:
+        """Unregisters a service by name."""
+        with self._lock:
+            if service_name in self._services:
+                del self._services[service_name]
+            if service_name in self._singletons:
+                del self._singletons[service_name]
+            if service_name in self._factories:
+                del self._factories[service_name]
+            if service_name in self._aliases:
+                del self._aliases[service_name]
+            if service_name in self._lifecycle_hooks:
+                del self._lifecycle_hooks[service_name]
+            if service_name in self._service_versions:
+                del self._service_versions[service_name]
+            if service_name in self._service_metadata:
+                del self._service_metadata[service_name]
+            if service_name in self._scoped_services:
+                del self._scoped_services[service_name]
+
+    def update_service_metadata(self, service_name: str, metadata: Dict[str, Any]) -> None:
+        """Updates metadata for a registered service."""
+        with self._lock:
+            if service_name in self._service_metadata:
+                self._service_metadata[service_name].update(metadata)
+            else:
+                raise ServiceNotRegisteredException(f"Service {service_name} not registered.")
+
+    def get_service_metadata(self, service_name: str) -> Dict[str, Any]:
+        """Retrieves metadata for a registered service."""
+        with self._lock:
+            if service_name in self._service_metadata:
+                return self._service_metadata[service_name]
+            raise ServiceNotRegisteredException(f"Service {service_name} not registered.")
+
+    def register_health_check(self, service_name: str, health_check_func: Callable[[], bool]) -> None:
+        """Registers a health check function for a service."""
+        with self._lock:
+            self._health_checks[service_name] = health_check_func
+
+    def remove_health_check(self, service_name: str) -> None:
+        """Removes a health check function for a service."""
+        with self._lock:
+            if service_name in self._health_checks:
+                del self._health_checks[service_name]
+            else:
+                raise ServiceNotRegisteredException(f"Health check for service {service_name} not registered.")
+
+    def register_middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]) -> None:
+        """Registers middleware for a specific hook."""
+        if hook_name in self._middleware:
+            with self._lock:
+                self._middleware[hook_name].append(middleware_func)
+        else:
+            raise ValueError(f"Invalid hook name: {hook_name}")
+
+    def remove_middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]) -> None:
+        """Removes middleware for a specific hook."""
+        if hook_name in self._middleware:
+            with self._lock:
+                if middleware_func in self._middleware[hook_name]:
+                    self._middleware[hook_name].remove(middleware_func)
+                else:
+                    raise ValueError(f"Middleware function not found for hook: {hook_name}")
+        else:
+            raise ValueError(f"Invalid hook name: {hook_name}")
+
+    def get_service_version(self, service_name: str) -> str:
+        """Retrieves the version of a registered service."""
+        with self._lock:
+            if service_name in self._service_versions:
+                return self._service_versions[service_name]
+            raise ServiceNotRegisteredException(f"Service {service_name} not registered.")
+
+    def update_service_version(self, service_name: str, version: str) -> None:
+        """Updates the version of a registered service."""
+        with self._lock:
+            if service_name in self._service_versions:
+                self._service_versions[service_name] = version
+            else:
+                raise ServiceNotRegisteredException(f"Service {service_name} not registered.")
+
+
+class ServiceLifecycleManager:
+    def __init__(self, registry: ServiceRegistry):
+        self.registry = registry
+
+    async def initialize_service(self, service_name: str) -> None:
+        """Initializes a service by calling its on_init hook."""
+        with self.registry._lock:
+            if service_name in self.registry._lifecycle_hooks:
+                on_init = self.registry._lifecycle_hooks[service_name].get('on_init')
+                if on_init:
+                    await on_init(self.registry._services[service_name])
+
+    async def shutdown_service(self, service_name: str) -> None:
+        """Shuts down a service by calling its on_shutdown hook."""
+        with self.registry._lock:
+            if service_name in self.registry._lifecycle_hooks:
+                on_shutdown = self.registry._lifecycle_hooks[service_name].get('on_shutdown')
+                if on_shutdown:
+                    await on_shutdown(self.registry._services[service_name])
+
+
+class ServiceHealthManager:
+    def __init__(self, registry: ServiceRegistry):
+        self.registry = registry
+
+    def check_health(self, service_name: str) -> bool:
+        """Checks the health of a registered service."""
+        return self.registry.check_health(service_name)
+
+    async def periodic_health_check(self, interval: int) -> None:
+        """Periodically checks the health of all registered services."""
+        await self.registry.periodic_health_check(interval)
+
+
+class ServiceMiddlewareManager:
+    def __init__(self, registry: ServiceRegistry):
+        self.registry = registry
+
+    def register_middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]) -> None:
+        """Registers middleware for a specific hook."""
+        self.registry.register_middleware(hook_name, middleware_func)
+
+    def remove_middleware(self, hook_name: str, middleware_func: Callable[[Any], Any]) -> None:
+        """Removes middleware for a specific hook."""
+        self.registry.remove_middleware(hook_name, middleware_func)
+
+
+class ServiceFactoryManager:
+    def __init__(self, registry: ServiceRegistry):
+        self.registry = registry
+
+    def register_factory(self, service_name: str, factory: Union[Callable[..., Any], Callable[..., asyncio.Future]],
+                         singleton: bool = True, scope: Optional[str] = None, aliases: Optional[List[str]] = None,
+                         on_init: Optional[Callable] = None, on_shutdown: Optional[Callable] = None,
+                         version: str = "1.0.0", metadata: Optional[Dict[str, Any]] = None) -> None:
+        """Registers a service factory."""
+        self.registry.register_factory(service_name, factory, singleton, scope, aliases, on_init, on_shutdown, version, metadata)
+
+    async def get_service(self, service_name: str) -> Any:
+        """Retrieves a service instance by name."""
+        return await self.registry.get(service_name)
+
+
+if __name__ == '__main':
+    # Create the DI container
+    container = DIContainer()
+
+    # Register services
+    container.register("service_a", ServiceA())
+    container.register("service_b", ServiceB())
+
+    # Resolve and use services
+    service_a = container.resolve("service_a")
+    logger.info(service_a.execute())  # Output: ServiceA executed
+
+    service_b = container.resolve("service_b")
+    logger.info(service_b.execute())  # Output: ServiceB executed
+    logger.success("Test Complete")

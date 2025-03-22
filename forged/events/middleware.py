@@ -1,7 +1,7 @@
 """
 
 """
-from bedrocked.reporting.reported import logger
+# from bedrocked.reporting.reported import logger
 from typing import Callable, Any, Dict, Tuple, List
 
 class MiddlewareManager:
@@ -23,8 +23,8 @@ class MiddlewareManager:
         """
 
         if not callable(middleware):
-            logger.error(f"'{str(type(middleware))}' is not callable and cannot be used for middleware in events "
-                         f"processing or management.")
+            #logger.error(f"'{str(type(middleware))}' is not callable and cannot be used for middleware in events "
+            #             f"processing or management.")
             raise ValueError("Middleware must be callable")
         self._middleware.append(middleware)
 

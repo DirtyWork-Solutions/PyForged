@@ -1,12 +1,13 @@
 import asyncio
 import time
 from typing import Callable, Dict, Any, List, Optional
+import logging as logger
 
-from runecaller._old.__bases__ import BaseHook
+from forged.hooks.hook_register import hook_namespace, _hook_registry
+from forged.namespacing import Symbol
 
-from bedrocked.reporting.reported import logger
 
-class Hook(BaseHook):
+class Hook():  # TODO: Base class
     def __init__(
         self,
         callback: Callable,
@@ -103,26 +104,20 @@ class HookManager:
                 except Exception as e:
                     logger.error(f"Error loading hook '{class_name}' from '{module_path}': {e}")
 
-    def register_hook(
-        self,
-        hook_point: str,
-        callback: Callable,
-        condition: Callable[[Dict[str, Any]], bool] = lambda ctx: True,
-        priority: int = 0,
-        name: str = "",
-        dependencies: Optional[List[str]] = None
-    ):
-        """Dynamically registers a hook for a specific hook point."""
-        hook = Hook(callback, condition, priority, name, dependencies)
-        if hook_point not in self.hooks:
-            self.hooks[hook_point] = []
-        self.hooks[hook_point].append(hook)
-        # Reorder hooks based on dependencies and priority.
-        self.hooks[hook_point] = self._resolve_order(self.hooks[hook_point])
-        # Ensure the event subscription for this hook point exists.
-        if hook_point not in self._event_subscriptions:
-            self._event_subscriptions[hook_point] = self.trigger_hooks_async
-        logger.info(f"Registered hook '{name}' on '{hook_point}' with priority {priority}.")
+    def register_hook(name: str, hook, priority: int = 10, enabled: bool = True,
+                                    dependencies: list = None, tags: list = None, metadata: dict = None):
+        """
+        Registers a hook under a given name with metadata.
+        """
+        dependencies = dependencies or []
+        tags = tags or []
+        metadata = metadata or {}
+        symbol = Symbol(value=hook, name=name, tags=tags)
+        for key, value in metadata.items():
+            symbol.attach_metadata(key, value)
+        hook_namespace.register(name, symbol)
+        _hook_registry.setdefault(name, []).append((priority, hook, enabled, dependencies))
+        _hook_registry[name].sort(key=lambda tup: tup[0])
 
     def unregister_hook(self, hook_point: str, name: str):
         """Unregisters a hook by its name from a given hook point."""
@@ -132,7 +127,8 @@ class HookManager:
             after = len(self.hooks[hook_point])
             logger.info(f"Unregistered hook '{name}' from '{hook_point}'. Removed {before - after} hook(s).")
 
-    async def trigger_hooks_async(self, hook_point: str, context: Dict[str, Any] = {}) -> Dict[str, Any]:
+    async def trigger_hooks_async(self, hook_point: str, context: Dict[str, Any] = {}, retries: int = 3) -> Dict[
+        str, Any]:
         """
         Asynchronously triggers all hooks registered to a hook point.
         Supports chaining: each hook may update the context.
@@ -154,28 +150,34 @@ class HookManager:
                 continue
 
             start_time = time.perf_counter()
-            try:
-                # Check if the callback is asynchronous.
-                if asyncio.iscoroutinefunction(hook.callback):
-                    result = await hook.callback(context)
-                else:
-                    result = hook.callback(context)
-                    if asyncio.isfuture(result) or hasattr(result, '__await__'):
-                        result = await result
-                end_time = time.perf_counter()
-
-                exec_time = end_time - start_time
-                self.metrics[hook_point].append(exec_time)
-                logger.info("Executed hook '%s' on '%s' in %.4f seconds.", hook.name, hook_point, exec_time)
-
-                # Chaining: if a hook returns an updated context, merge it.
-                if result is not None:
-                    if isinstance(result, dict):
-                        context.update(result)
+            attempt = 0
+            while attempt < retries:
+                try:
+                    # Check if the callback is asynchronous.
+                    if asyncio.iscoroutinefunction(hook.callback):
+                        result = await hook.callback(context)
                     else:
-                        logger.warning("Hook '%s' returned a non-dict value; skipping context merge.", hook.name)
-            except Exception as e:
-                logger.error("Error executing hook '%s' on '%s': %s", hook.name, hook_point, e)
+                        result = hook.callback(context)
+                        if asyncio.isfuture(result) or hasattr(result, '__await__'):
+                            result = await result
+                    end_time = time.perf_counter()
+
+                    exec_time = end_time - start_time
+                    self.metrics[hook_point].append(exec_time)
+                    logger.info("Executed hook '%s' on '%s' in %.4f seconds.", hook.name, hook_point, exec_time)
+
+                    # Chaining: if a hook returns an updated context, merge it.
+                    if result is not None:
+                        if isinstance(result, dict):
+                            context.update(result)
+                        else:
+                            logger.warning("Hook '%s' returned a non-dict value; skipping context merge.", hook.name)
+                    break
+                except Exception as e:
+                    attempt += 1
+                    logger.error(f"Error executing hook '{hook.name}' on '{hook_point}' on attempt {attempt}: {e}")
+                    if attempt >= retries:
+                        logger.error(f"Hook '{hook.name}' failed after {retries} attempts.")
         return context
 
     def trigger_hooks(self, hook_point: str, context: Dict[str, Any] = {}) -> Dict[str, Any]:
