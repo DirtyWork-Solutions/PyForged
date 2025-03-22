@@ -15,7 +15,7 @@ Usage:
     subject1.attach(observer1)
     subject1.notify("Message for Subject 1")
 """
-
+from typing import Any, Callable, List, Tuple
 from abc import ABC, abstractmethod
 import threading
 import heapq
@@ -99,8 +99,22 @@ class Subject:
         with self._lock:
             observers_snapshot = list(self._observers)
         for _, observer in observers_snapshot:
-            if observer.is_interested(message):
+            if observer.is_interested(message) and observer.filter(message):
                 observer.update(self, message)
+
+    def update_priority(self, observer: Observer, new_priority: int) -> None:
+        """
+        Update the priority of an attached observer.
+
+        Args:
+            observer (Observer): The observer whose priority is to be updated.
+            new_priority (int): The new priority of the observer.
+        """
+        with self._lock:
+            # Remove the observer from the list
+            self._observers = [(p, o) for p, o in self._observers if o != observer]
+            # Re-add the observer with the new priority
+            heapq.heappush(self._observers, (-new_priority, observer))
 
     @property
     def name(self) -> str:
@@ -140,6 +154,7 @@ class ConcreteObserver(Observer):
         __lt__(other: 'ConcreteObserver') -> bool:
             Compare two observers based on their names.
     """
+
     def __init__(self, name: str, interested_in: str, active: bool = True):
         self._name = name
         self._interested_in = interested_in
@@ -184,6 +199,9 @@ class ConcreteObserver(Observer):
             bool: True if the observer is interested in the message, False otherwise.
         """
         return self._interested_in in message
+
+    def filter(self, message: str) -> bool:
+        return self._filter_criteria(message)
 
     def __lt__(self, other: 'ConcreteObserver') -> bool:
         """
