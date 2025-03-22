@@ -112,6 +112,18 @@ class Subject:
         """
         return self._name
 
+    def __eq__(self, other: 'Subject') -> bool:
+        return self._name == other._name
+
+    def __ne__(self, other: 'Subject') -> bool:
+        return not self.__eq__(other)
+
+    def __repr__(self) -> str:
+        return f"Subject(name={self._name})"
+
+    def __hash__(self) -> int:
+        return hash(self._name)
+
 class ConcreteObserver(Observer):
     """
     A concrete implementation of the Observer class.
@@ -128,9 +140,27 @@ class ConcreteObserver(Observer):
         __lt__(other: 'ConcreteObserver') -> bool:
             Compare two observers based on their names.
     """
-    def __init__(self, name: str, interested_in: str):
+    def __init__(self, name: str, interested_in: str, active: bool = True):
         self._name = name
         self._interested_in = interested_in
+        self._last_message = ""
+        self._active = active
+
+    @property
+    def last_message(self) -> str:
+        return self._last_message
+
+    @last_message.setter
+    def last_message(self, value: str) -> None:
+        self._last_message = value
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    def active(self, value: bool) -> None:
+        self._active = value
 
     def update(self, subject: Subject, message: str) -> None:
         """
@@ -140,6 +170,7 @@ class ConcreteObserver(Observer):
             subject (Subject): The subject sending the message.
             message (str): The message from the subject.
         """
+        self._last_message = message
         print(f"{self._name} received message from {subject.name}: {message}")
 
     def is_interested(self, message: str) -> bool:
@@ -165,6 +196,18 @@ class ConcreteObserver(Observer):
             bool: True if this observer's name is less than the other observer's name, False otherwise.
         """
         return self._name < other._name
+
+    def __eq__(self, other: 'ConcreteObserver') -> bool:
+        return self._name == other._name
+
+    def __ne__(self, other: 'ConcreteObserver') -> bool:
+        return not self.__eq__(other)
+
+    def __repr__(self) -> str:
+        return f"ConcreteObserver(name={self._name}, interested_in={self._interested_in})"
+
+    def __hash__(self) -> int:
+        return hash((self._name, self._interested_in))
 
 if __name__ == '__main__':
     subject1 = Subject("Subject 1")
