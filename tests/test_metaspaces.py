@@ -31,7 +31,7 @@ class TestMetaManager(unittest.TestCase):
         self.assertFalse(self.meta_manager.is_feature_flag_enabled(flag))
 
     def test_save_and_load_metadata(self):
-        file_path = "test_metadata.json"
+        file_path = "files/test_metadata.json"
         self.meta_manager.set_runtime_context("key1", "value1")
         self.meta_manager.save_metadata(file_path)
         self.meta_manager.set_runtime_context("key1", "value2")
