@@ -1,0 +1,11 @@
+{
+  "hooks": [
+    {
+      "name": "test_hook",
+      "priority": 10,
+      "enabled": true,
+      "dependencies": [],
+      "tags": []
+    }
+  ]
+}
