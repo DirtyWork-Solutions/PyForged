@@ -12,16 +12,15 @@ Internal attributes:
     connections -- { senderkey (id) : { signal : [receivers...]}}
     senders -- { senderkey (id) : weakref(sender) }
         used for cleaning up sender references on sender deletion
-    sendersBack -- { receiverkey (id) : [senderkey (id)...] }
+    senders_back -- { receiverkey (id) : [senderkey (id)...] }
         used for cleaning up receiver references on receiver deletion, (considerably speeds up the cleanup process
-        vs. the original code.)
 """
 
 import asyncio
 import weakref
-from queue import Queue
+from asyncio import Queue
 from threading import Thread
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Generator, Set
 
 from forged.events import robustapply
 from forged.events.middleware import MiddlewareManager
@@ -32,13 +31,12 @@ __all__ = ["get_receivers", "live_receivers", "get_all_receivers", "send", "asyn
 middleware_manager = MiddlewareManager()
 filter_manager = EventFilterManager()
 
-
 connections: Dict[int, Dict[Any, List[Callable]]] = {}
-sendersBack: Dict[int, set] = {}
+senders_back: Dict[int, Set[int]] = {}
 senders: Dict[int, weakref.ReferenceType] = {}
 
 def get_receivers(sender: Any, signal: Any) -> List[Callable]:
-    """Retrieve the list of receivers for a given sender and signal.
+    """Retrieve the list of receiv ers for a given sender and signal.
 
     Args:
         sender (Any): The sender of the signal.
@@ -52,7 +50,7 @@ def get_receivers(sender: Any, signal: Any) -> List[Callable]:
     except KeyError:
         return []
 
-def live_receivers(receivers: List[Union[Callable, weakref.ReferenceType]]) -> Callable:
+def live_receivers(receivers: List[Union[Callable, weakref.ReferenceType]]) -> Generator[Callable, None, None]:
     """Yield live receivers from a list of receivers.
 
     Args:
@@ -69,7 +67,7 @@ def live_receivers(receivers: List[Union[Callable, weakref.ReferenceType]]) -> C
         else:
             yield receiver
 
-def get_all_receivers(sender: Any = Any, signal: Any = Any) -> Callable:
+def get_all_receivers(sender: Any = Any, signal: Any = Any) -> Generator[Callable, None, None]:
     """Retrieve all receivers for a given sender and signal, including wildcards.
 
     Args:
@@ -80,13 +78,13 @@ def get_all_receivers(sender: Any = Any, signal: Any = Any) -> Callable:
         Callable: A receiver callable.
     """
     receivers = {}
-    for set in (
+    for receiver_set in (
             get_receivers(sender, signal),
             get_receivers(sender, Any),
             get_receivers(Any, signal),
             get_receivers(Any, Any),
     ):
-        for receiver in set:
+        for receiver in receiver_set:
             if receiver:
                 try:
                     if receiver not in receivers:
@@ -96,7 +94,7 @@ def get_all_receivers(sender: Any = Any, signal: Any = Any) -> Callable:
                     pass
 
 async def send(signal: Any = Any, sender: Any = None, *arguments, **named) -> List[Tuple[Callable, Any]]:
-    """Send a signal asynchronously to all connected receivers.
+    """Send a signal **asynchronously** to all connected receivers.
 
     Args:
         signal (Any, optional): The signal being sent. Defaults to Any.
@@ -116,7 +114,6 @@ async def send(signal: Any = Any, sender: Any = None, *arguments, **named) -> Li
             response = robustapply.robustApply(receiver, signal=signal, sender=sender, *arguments, **named)
         responses.append((receiver, response))
     return responses
-
 
 async def async_send(signal: Any = Any, sender: Any = None, *arguments, **named) -> List[Tuple[Callable, Any]]:
     """Send a signal asynchronously to all connected receivers using a queue.
@@ -142,33 +139,33 @@ async def async_send(signal: Any = Any, sender: Any = None, *arguments, **named)
         responses.append((receiver, response))
     return responses
 
+
 def threaded_send(signal: Any = Any, sender: Any = None, *arguments, **named) -> List[Tuple[Callable, Any]]:
-    """Send a signal to all connected receivers using multiple threads.
-
-    Args:
-        signal (Any, optional): The signal being sent. Defaults to Any.
-        sender (Any, optional): The sender of the signal. Defaults to None.
-
-    Returns:
-        List[Tuple[Callable, Any]]: A list of tuples containing the receiver and its response.
-    """
     responses = []
     queue = Queue()
+    print(queue)
     for receiver in live_receivers(get_all_receivers(sender, signal)):
         queue.put(receiver)
 
     def worker():
         while not queue.empty():
             receiver = queue.get()
-            response = robustapply.robustApply(receiver, signal=signal, sender=sender, *arguments, **named)
-            responses.append((receiver, response))
-            queue.task_done()
+            try:
+                response = robustapply.robustApply(receiver, signal=signal, sender=sender, *arguments, **named)
+                responses.append((receiver, response))
+            except Exception as e:
+                print(f"Error processing receiver {receiver}: {e}")
+            finally:
+                queue.task_done()
 
     threads = [Thread(target=worker) for _ in range(4)]
     for thread in threads:
         thread.start()
     for thread in threads:
         thread.join()
+
+    # Debug: Check responses after all threads have completed
+    print("Responses after threading:", responses)
 
     return responses
 
@@ -181,11 +178,11 @@ def _removeReceiver(receiver: Callable) -> bool:
     Returns:
         bool: True if the receiver was removed, False otherwise.
     """
-    if not sendersBack:
+    if not senders_back:
         return False
     backKey = id(receiver)
     try:
-        backSet = sendersBack.pop(backKey)
+        backSet = senders_back.pop(backKey)
     except KeyError:
         return False
     else:
@@ -259,8 +256,8 @@ def _removeBackrefs(senderkey: int) -> None:
     else:
         items = signals.items()
         def allReceivers():
-            for signal, set in items:
-                for item in set:
+            for signal, receiver_set in items:
+                for item in receiver_set:
                     yield item
         for receiver in allReceivers():
             _killBackref(receiver, senderkey)
@@ -306,18 +303,18 @@ def _killBackref(receiver: Callable, senderkey: int) -> bool:
         senderkey (int): The key of the sender.
 
     Returns:
-        **bool**  | is *True* - if the back reference was killed, *False* otherwise.
+        bool: True if the back reference was killed, False otherwise.
     """
     receiverkey = id(receiver)
-    set = sendersBack.get(receiverkey, set())
-    while senderkey in set:
+    receiver_set = senders_back.get(receiverkey, set())
+    while senderkey in receiver_set:
         try:
-            set.remove(senderkey)
+            receiver_set.remove(senderkey)
         except KeyError:
             break
-    if not set:
+    if not receiver_set:
         try:
-            del sendersBack[receiverkey]
+            del senders_back[receiverkey]
         except KeyError:
             pass
     return True
@@ -325,3 +322,5 @@ def _killBackref(receiver: Callable, senderkey: int) -> bool:
 if __name__ == '__main__':
     def startup():
         print("testing")
+
+    startup()

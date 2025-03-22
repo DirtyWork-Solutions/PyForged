@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 #
@@ -68,3 +68,50 @@ class BaseTask(ABC):
 #
 class BaseQueue(ABC):
     pass
+
+
+#
+class BaseNamespace(ABC):
+    """"""
+
+    @abstractmethod
+    def __init__(self, name):
+        self.name = name
+
+    @abstractmethod
+    def register(self, path: str, value, *args, **kwargs):
+        """Register a symbol at a specific path."""
+        pass
+
+    @abstractmethod
+    def resolve(self, path: str, **kwargs):
+        pass
+
+    @abstractmethod
+    def list(self):
+        pass
+
+    def __getitem__(self, path: str):
+        return self.resolve(path)
+
+    def __setitem__(self, path: str, value):
+        self.register(path, value)
+
+    def __repr__(self):
+        return f"<Namespace(name={self.name})>"
+
+    def __str__(self):
+        return self.name
+
+    def __len__(self):
+        return len(self.list())
+
+    def __contains__(self, path: str):
+        try:
+            self.resolve(path)
+            return True
+        except KeyError:
+            return False
+
+    def __iter__(self):
+        return iter(self.list())

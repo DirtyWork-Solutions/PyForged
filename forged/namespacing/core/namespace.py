@@ -1,5 +1,6 @@
 from typing import Optional
 
+from forged.__bases__ import BaseNamespace
 from forged.namespacing.access.context_guard import GlobalContext
 from forged.namespacing.core.node import NamespaceNode
 from forged.namespacing.core.symbol import Symbol
@@ -7,9 +8,9 @@ from forged.namespacing.core.resolver import Resolver
 from forged.namespacing.core.utils import split_path
 
 
-class Namespace:
+class Namespace(BaseNamespace):
     def __init__(self, name: str = "root", parent=None, policy=None):
-        self.name = name
+        super().__init__(name)
         self.parent = parent
         self.root = NamespaceNode(name)
         self.resolver = Resolver()
@@ -166,6 +167,24 @@ class Namespace:
         return self.resolve(path)
 
     def __setitem__(self, path: str, value):
-        self.register(path, value)
+        self.register(path, value),
 
+    def __repr__(self):
+        return f"<Namespace(name={self.name})>"
+
+    def __str__(self):
+        return self.name
+
+    def __len__(self):
+        return len(self.list())
+
+    def __contains__(self, path: str):
+        try:
+            self.resolve(path)
+            return True
+        except KeyError:
+            return False
+
+    def __iter__(self):
+        return iter(self.list())
 
