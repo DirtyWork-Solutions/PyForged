@@ -14,7 +14,7 @@ class NamespaceNode:
         """
         self.name: str = name
         self.children: Dict[str, 'NamespaceNode'] = {}
-        self.symbol: Optional[Symbol] = None
+        self.symbol: Optional[BaseSymbol] = None
 
     def add_child(self, name: str) -> 'NamespaceNode':
         """

@@ -2,12 +2,18 @@ import unittest
 import json
 import yaml
 import os
-from forged.commons.patterns.mixins import JSONSerializedBasic, YAMLSerializedBasic, SerializedMixin, BasicSingleton, ObservableMixin, ReprMixin
+from forged.commons.patterns.mixins import (
+    JSONSerializedBasic,
+    YAMLSerializedBasic,
+    SerializedMixin,
+    BasicSingleton,
+    ObservableMixin,
+    ReprMixin)
 
 class TestMixins(unittest.TestCase):
 
     def setUp(self):
-        self.file_path = "test_file.json"
+        self.file_path = "files/test_file.json"
 
     def tearDown(self):
         if os.path.exists(self.file_path):
