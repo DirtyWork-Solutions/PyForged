@@ -4,19 +4,10 @@ from abc import ABC, abstractmethod
 class BaseActivity(ABC):
 
     @abstractmethod
-    def __init__(self, conf: dict = None, conf_allow_new: bool = True):
+    def __init__(self, conf: dict = None):
         self.name = 'unknown'
         # Setup conf
-        self._conf = {
-            "reporting": {
-                "logging": {
-                    "enabled": True
-                }
-            },
-            "announcing": {
-                "enabled": True
-            }
-        }
+        self._conf = {}
         if conf:
             self._conf.update(conf)
 

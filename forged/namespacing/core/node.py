@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 from loguru import logger
 
-from forged.namespacing import Symbol
+from forged.__bases__ import BaseSymbol
 
 
 class NamespaceNode:

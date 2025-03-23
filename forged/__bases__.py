@@ -115,3 +115,7 @@ class BaseNamespace(ABC):
 
     def __iter__(self):
         return iter(self.list())
+
+
+class BaseSymbol(ABC):
+    pass
