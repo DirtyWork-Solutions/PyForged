@@ -1,5 +1,6 @@
 """
-This module provides various utilities for error handling and resilience patterns, including custom exceptions, decorators for exception handling and retries, a circuit breaker implementation, and error aggregation and cataloging.
+This module provides various utilities for error handling and resilience patterns, including custom exceptions,
+decorators for exception handling and retries, a circuit breaker implementation, and error aggregation and cataloging.
 
 Classes:
     - CustomException: Base exception class for all PyForaged errors.

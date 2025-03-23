@@ -1,6 +1,6 @@
-
+from loguru import logger
 #
 try:
     from pydantic import BaseModel
 except ModuleNotFoundError as e:  # TODO: Log missing pydantic
-    pass
+    logger.warning("Pydantic is not installed.")
