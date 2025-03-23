@@ -188,3 +188,68 @@ class Namespace(BaseNamespace):
     def __iter__(self):
         return iter(self.list())
 
+def namespace_from_dict(data, name="from_dict"):
+    """
+    Creates a namespace from a dictionary.
+
+    Args:
+        data (dict): The dictionary to create the namespace from.
+        name (str): The name of the resulting namespace. Defaults to "from_dict".
+
+    Returns:
+        Namespace: The created namespace.
+    """
+    ns = Namespace(name)
+    for path, value in data.items():
+        ns.register(path, value)
+    return ns
+
+import json
+
+def export_namespace_to_json(namespace) -> str:
+    """
+    Exports a namespace to a JSON string.
+
+    Args:
+        namespace: The namespace to export.
+
+    Returns:
+        str: The JSON string representation of the namespace.
+    """
+    return json.dumps(namespace.to_dict())
+
+import json
+
+def import_namespace_from_json(json_str: str, name="imported") -> Namespace:
+    """
+    Imports a namespace from a JSON string.
+
+    Args:
+        json_str (str): The JSON string to import.
+        name (str): The name of the resulting namespace. Defaults to "imported".
+
+    Returns:
+        Namespace: The imported namespace.
+    """
+    data = json.loads(json_str)
+    return namespace_from_dict(data, name=name)
+
+def compare_namespaces(ns1: Namespace, ns2: Namespace) -> dict:
+    """
+    Compares two namespaces and returns the differences.
+
+    Args:
+        ns1 (Namespace): The first namespace to compare.
+        ns2 (Namespace): The second namespace to compare.
+
+    Returns:
+        dict: A dictionary containing the differences.
+    """
+    dict1 = ns1.to_dict()
+    dict2 = ns2.to_dict()
+    differences = {
+        "only_in_ns1": {k: v for k, v in dict1.items() if k not in dict2},
+        "only_in_ns2": {k: v for k, v in dict2.items() if k not in dict1},
+        "different_values": {k: (dict1[k], dict2[k]) for k in dict1 if k in dict2 and dict1[k] != dict2[k]}
+    }
+    return differences
