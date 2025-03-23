@@ -16,7 +16,7 @@ class Namespace(BaseNamespace):
         self.resolver = Resolver()
         self.policy = policy  # Optional
 
-    def register(self, path: str, value, **kwargs):
+    def register(self, path: str, value, metadata: Optional[dict] = None, **kwargs):
         """Register a symbol at a specific path."""
         parts = split_path(path)
         current = self.root
@@ -31,7 +31,7 @@ class Namespace(BaseNamespace):
             self.resolver.handle_conflict(current.get_child(final), value, path)
 
         node = current.add_child(final)
-        node.symbol = value if isinstance(value, Symbol) else Symbol(value=value)
+        node.symbol = Symbol(value=value, metadata=metadata)
 
     def resolve(self, path, action: Optional[str] = 'read', context=None, **kwargs):
         """Resolve a path and return the associated symbol."""

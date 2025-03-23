@@ -1,4 +1,5 @@
-from typing import Any, Optional, Callable, List, Tuple
+from loguru import logger
+from typing import Any, Optional, Callable, List, Tuple, Dict
 
 from forged.namespacing.core.symbol import Symbol
 from forged.namespacing.core.node import NamespaceNode
@@ -13,10 +14,13 @@ _conflict_modes = [
 
 class Resolver:
     def __init__(self):
-        self.conflict_mode = "strict"
-        self.lazy_registry = {}
+        self.conflict_mode: str = "strict"
+        self.lazy_registry: Dict[str, Callable] = {}
 
-    def handle_conflict(self, existing_node, new_value, path):
+    def handle_conflict(self, existing_node: NamespaceNode, new_value: Any, path: str) -> None:
+        """
+        Handle conflicts based on the conflict mode.
+        """
         if self.conflict_mode == "replace":
             return  # allow overwrite
         elif self.conflict_mode == "chain":
@@ -35,27 +39,40 @@ class Resolver:
         else:
             raise ValueError(f"Conflict at {path}: symbol already exists.")
 
-    def bind_lazy(self, path: str, loader: Callable):
+    def bind_lazy(self, path: str, loader: Callable) -> None:
+        """
+        Bind a lazy loader to a path.
+        """
         self.lazy_registry[path] = loader
 
     def has_lazy(self, path: str) -> bool:
+        """
+        Check if a lazy loader is bound to a path.
+        """
         return path in self.lazy_registry
 
-    def load_lazy(self, path: str):
+    def load_lazy(self, path: str) -> Symbol:
+        """
+        Load a lazy symbol for a given path.
+        """
         loader = self.lazy_registry.get(path)
         if not loader:
+            logger.error(f"No lazy loader for path {path}")
             raise KeyError(f"No lazy loader for path {path}")
-        return Symbol(value=loader())  # or wrap in Symbol if needed
+        return Symbol(value=loader())
 
     def match_pattern(
             self,
             root: NamespaceNode,
             pattern: str
-    ) -> List[Tuple[str, 'Symbol']]:
+    ) -> List[Tuple[str, Symbol]]:
+        """
+        Match a pattern against the namespace tree.
+        """
         parts = split_path(pattern)
-        results = []
+        results: List[Tuple[str, Symbol]] = []
 
-        def dfs(node, path_so_far, remaining_parts):
+        def dfs(node: NamespaceNode, path_so_far: List[str], remaining_parts: List[str]) -> None:
             if not remaining_parts:
                 if node.symbol:
                     results.append((".".join(path_so_far), node.symbol))
