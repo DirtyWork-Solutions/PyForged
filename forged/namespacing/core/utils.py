@@ -27,14 +27,14 @@ Functions:
         Validate that a path conforms to expected rules (e.g., valid identifiers).
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple, Union
 
 
-def split_path(path: str):
+def split_path(path: str) -> List[str] | str:
     """Split a dot path into segments."""
     return path.strip(".").split(".")
 
-def join_path(parts):
+def join_path(parts: Union[str, Tuple]) -> str:
     """Join path parts into a dot path."""
     return ".".join(parts)
 
