@@ -1,0 +1,9 @@
+profile:
+  app:
+    name: my-app
+    version: 1.0.0
+  elements:
+    config: null
+    events: null
+    hooks: null
+    mods: null

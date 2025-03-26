@@ -1,5 +1,3 @@
-# Index
-###### PyForged Documentation
-
-wd
-
+# Index | Documentation
+###### PyForged  |  [Docs Home](DOCS.md)
+- - - - 

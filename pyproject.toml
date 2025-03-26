@@ -1,60 +1,39 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyforged"
-version = "0.2.7.dev2"
-description = "The PyForged EcoSystem (core)."
+version = "1.0.0"
+description = "brief description"
 authors = [
-    {name = "DirtyWork Solutions Limited", email = "pyforge-core@open.dirtywork.solutions"}
+    { name = "DirtyWork Solutions", email = "forged@open.dirtywork.solutions" }
 ]
-license = {file = "LICENSE.md"}
-readme = "README.md"
-requires-python = ">=3.12"
-
-dependencies = [
-    "antlr4-python3-runtime~=4.9.3",
-    "pytest~=8.3.5",
-    "pytest-metadata~=3.1.1",
-    "pydantic~=2.10.6",
-    "cryptography~=44.0.2",
-    "requests~=2.32.3",
-    "pyyaml~=6.0.2",
-    "cachetools~=5.5.2",
-    "loguru~=0.7.1"
-]
-
+readme = {file="README.md", content-type="text/markdown"}
+license ={file= "LICENSE.md", content-type="text/markdown"}
 classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Development Status :: 2 - Pre-Alpha",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Topic :: System",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Utilities",
-    "Topic :: System :: Installation/Setup"
+    "Intended Audience :: Developers"
+]
+dependencies = [
+    "pip ~=25.0.1",
+    "wheel ~=0.45.1",
+    "setuptools ~=61.0.0",
+    "loguru ~=0.7.3",
+    "pytest ~=8.3.5",
+    "pytest-asyncio ~=0.25.3",
+    "pytest-loguru ~=0.4.0"
 ]
 
 [project.optional-dependencies]
-suite = [
-    "bedrocked~=0.1.4",
-    "runecaller~=0.1.4",
-    "wardkeeper~=0.1.0"
+dev = [
+    "tox",
 ]
-std = [
-    "bedrocked~=0.1.4",
-    "runecaller~=0.1.4",
-    "wardkeeper~=0.1.0"
-]
-dev = []
 
-[project.urls]
-Homepage = "https://open.dirtywork.solutions/pyforged"
-Documentation = "https://github.com/DirtyWork-Solutions/RuneCaller/docs/INDEX.md"
-Source = "https://github.com/DirtyWork-Solutions/RuneCaller"
-Issues = "https://github.com/DirtyWork-Solutions/RuneCaller/tree/main/.github/ISSUE_TEMPLATE"
+[tool.setuptools]
+packages = ["forged"]
+package-dir = {"" = "src"}
