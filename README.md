@@ -52,10 +52,4 @@ Built on OmegaConf, this component provides structured, hierarchical configurati
 
 Summary
 
-This SDK is not a framework — it's a foundational toolkit. It gives you the right abstractions and tools to build applications, libraries, or plugins with clean separation of concerns, high extensibility, and good developer ergonomics. Whether you're writing a simple CLI tool or a modular plugin-based system, this SDK helps you build smarter, not harder.
-
-
----
-
-Want to add goals, philosophy, or examples to this description?
-
+This PyForged is not a framework — it's a foundational toolkit. It gives you the right abstractions and tools to build applications, libraries, or plugins with clean separation of concerns, high extensibility, and good developer ergonomics. Whether you're writing a simple CLI tool or a modular plugin-based system, this'll help you build smarter, not harder.
